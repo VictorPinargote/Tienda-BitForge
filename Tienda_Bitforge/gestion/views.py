@@ -198,7 +198,7 @@ def actualizar_stock(request, producto_id):
         messages.success(request, f'Stock de {producto.nombre} actualizado a {nuevo_stock}')
     return redirect('gestion_stock')
 
-#Vista del panel admin+
+#Vista del panel admin
 @staff_member_required  
 def panel_admin(request):
     from django.db.models import Sum
@@ -214,4 +214,31 @@ def panel_admin(request):
         'solicitudes_pendientes': solicitudes_pendientes,
         'total_ventas': total_ventas
     })
+
+# Vista de agregar al carrito
+@login_required
+def agregar_carrito(request, producto_id):
+    producto = Producto.objects.get(id=producto_id)
+    # Validar stock
+    if producto.stock <= 0:
+        messages.error(request, 'Este producto no tiene stock disponible')
+        return redirect('home')
+    
+    item, created = CarritoItem.objects.get_or_create(
+        usuario=request.user,
+        producto=producto,
+        defaults={'cantidad': 1}
+    )
+    
+    if not created:
+        if item.cantidad < producto.stock:
+            item.cantidad += 1
+            item.save()
+        else:
+            messages.warning(request, 'No hay suficiente stock')
+            return redirect('home')
+    
+    messages.success(request, f'{producto.nombre} agregado al carrito')
+    return redirect('home')
+
 # Create your views here.
