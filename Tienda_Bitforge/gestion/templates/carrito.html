@@ -1,0 +1,217 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Carrito | BitForge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-blue: #00ccff;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-green);
+        }
+
+        .brand-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .cart-container {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .cart-item {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+
+        .cart-item:hover {
+            border-color: var(--neon-green);
+        }
+
+        .cart-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-neon:hover {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .quantity-input {
+            width: 70px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .total-box {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 255, 0.1));
+            border: 2px solid var(--neon-green);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand brand-title" href="{% url 'home' %}">
+                <i class="bi bi-cpu"></i> BITFORGE
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-light">Hola, {{ user.username }}</span>
+                <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <h2 class="mb-4">
+            <i class="bi bi-cart3 text-neon"></i> Mi Carrito
+        </h2>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="cart-container">
+                    {% if items %}
+                    {% for item in items %}
+                    <div class="cart-item">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <img src="{{ item.producto.imagen_url|default:'https://via.placeholder.com/80x80?text=HW' }}"
+                                    alt="{{ item.producto.nombre }}">
+                            </div>
+                            <div class="col">
+                                <h5 class="mb-1">{{ item.producto.nombre }}</h5>
+                                <span class="badge bg-primary">{{ item.producto.get_tipo_display }}</span>
+                                <p class="text-secondary small mb-0 mt-1">{{ item.producto.descripcion|truncatewords:10
+                                    }}</p>
+                            </div>
+                            <div class="col-auto text-center">
+                                <form action="{% url 'actualizar_cantidad' item.id %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="number" name="cantidad" value="{{ item.cantidad }}" min="0" max="99"
+                                        class="quantity-input" onchange="this.form.submit()">
+                                </form>
+                            </div>
+                            <div class="col-auto text-end">
+                                <p class="text-neon fw-bold fs-5 mb-0">${{ item.subtotal }}</p>
+                                <small class="text-muted">${{ item.producto.precio }} c/u</small>
+                            </div>
+                            <div class="col-auto">
+                                <a href="{% url 'eliminar_carrito' item.id %}" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-cart-x text-secondary" style="font-size: 4rem;"></i>
+                        <h4 class="text-secondary mt-3">Tu carrito está vacío</h4>
+                        <p class="text-muted">Explora nuestro catálogo y agrega productos</p>
+                        <a href="{% url 'home' %}" class="btn btn-neon mt-3">
+                            <i class="bi bi-shop"></i> Ver Catálogo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                {% if items %}
+                <div class="total-box">
+                    <h4 class="mb-4"><i class="bi bi-receipt"></i> Resumen</h4>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Productos ({{ items|length }})</span>
+                        <span>${{ total }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-secondary">Envío</span>
+                        <span class="text-success">Gratis</span>
+                    </div>
+
+                    <hr class="border-secondary">
+
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="fs-5 fw-bold">Total</span>
+                        <span class="fs-4 text-neon fw-bold">${{ total }}</span>
+                    </div>
+
+                    <button class="btn btn-neon w-100 py-2">
+                        <i class="bi bi-credit-card"></i> Proceder al Pago
+                    </button>
+
+                    <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 mt-2">
+                        <i class="bi bi-arrow-left"></i> Seguir Comprando
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

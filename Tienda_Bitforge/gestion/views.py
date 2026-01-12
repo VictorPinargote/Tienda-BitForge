@@ -1,7 +1,8 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm #Formulario para creación de usuario
 from django.contrib import messages #Mensajes de confirmación
-from .models import Producto
+from .models import Producto, CarritoItem, Solicitud
 
 # Vista principal - Página de inicio
 def home(request):
@@ -23,5 +24,50 @@ def registro(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/registro.html', {'form': form})
+
+# Vista del carrito
+@login_required
+def ver_carrito(request):
+    items = CarritoItem.objects.filter(usuario=request.user)
+    total = sum(item.subtotal() for item in items)
+    return render(request, 'carrito.html', {'items': items, 'total': total})
+
+# Vista de agregar al carrito
+@login_required
+def agregar_carrito(request, producto_id):
+    producto = Producto.objects.get(id=producto_id)
+    item, created = CarritoItem.objects.get_or_create(
+        usuario=request.user,
+        producto=producto,
+        defaults={'cantidad': 1}
+    )
+    
+    if not created:
+        item.cantidad += 1
+        item.save()
+    
+    messages.success(request, f'{producto.nombre} agregado al carrito')
+    return redirect('home')
+
+# Vista de eliminar del carrito
+@login_required
+def eliminar_carrito(request, item_id):
+    item = CarritoItem.objects.get(id=item_id, usuario=request.user)
+    item.delete()
+    messages.success(request, 'Producto eliminado del carrito')
+    return redirect('ver_carrito')
+
+# Vista de actualizar cantidad
+@login_required
+def actualizar_cantidad(request, item_id):
+    if request.method == 'POST':
+        cantidad = int(request.POST.get('cantidad', 1))
+        item = CarritoItem.objects.get(id=item_id, usuario=request.user)
+        if cantidad > 0:
+            item.cantidad = cantidad
+            item.save()
+        else:
+            item.delete()
+    return redirect('ver_carrito')
 
 # Create your views here.
