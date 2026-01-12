@@ -17,7 +17,7 @@ class Categoria(models.Model):
 #Modelo de Proveedor
 class Proveedor(models.Model):
     nombre = models.CharField(max_length=50)
-    email = models.EmailField()
+    email = models.EmailField(unique=True) #unique=True permite que el campo sea único y usar emailfield para validar que sea un email
     telefono = models.CharField(max_length=15)
     direccion = models.CharField(max_length=100)
     activo = models.BooleanField(default=True)
@@ -27,3 +27,42 @@ class Proveedor(models.Model):
 
     class Meta:
         verbose_name_plural = "Proveedores"
+
+#Modelo de Producto
+class Producto(models.Model):
+    #tipos de productos
+    TIPO_CHOICES = (
+        ('componente', 'Componente'),
+        ('kit', 'Kit'),
+        ('pc_armada', 'PC Armada'),
+    )
+    #atributos
+    nombre = models.CharField(max_length=50)
+    descripcion = models.TextField(blank=True, null=True)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.PositiveBigIntegerField(default=0)
+    imagen_url = models.URLField(blank=True, null=True)
+    #relacion con la categoria 
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
+    #on_delete=models.CASCADE significa que si se elimina la categoria, se eliminan todos los productos
+    
+    #relacion con el proveedor
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True)
+    #on_delete=models.SET_NULL, null=True significa que si se elimina el proveedor, se establece el campo a null
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='componente') #con el choices hace que use la tupla TIPO_CHOICES
+    disponible = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True) #auto_now_add=True crea un campo que almacena la fecha y hora de creacion del objeto
+
+    def __str__(self):
+        return f"{self.nombre} - {self.precio}"
+
+    def get_estado_stock(self):
+        # para que se muestre el estado al cliente
+        if self.stock == 0:
+            return "Agotado"
+        elif self.stock <= 3:
+            return "ultimas unidades"
+        else:
+            return "Disponible"
+
+    
