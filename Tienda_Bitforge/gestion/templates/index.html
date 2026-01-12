@@ -14,7 +14,6 @@
         rel="stylesheet">
 
     <style>
-        /* --- ESTILOS VISUALES ESPECÍFICOS PARA BITFORGE --- */
         :root {
             --neon-green: #00ff88;
             --neon-blue: #00ccff;
@@ -28,29 +27,23 @@
             background-color: #000;
         }
 
-        /* FUENTE GAMER PARA TÍTULOS */
         h1,
         h2,
         h3,
         .navbar-brand {
             font-family: 'Orbitron', sans-serif;
-            /* Fuente futurista */
             letter-spacing: 2px;
         }
 
-        /* FONDO PRINCIPAL CON IMAGEN FIJA (PARALLAX) */
         .bg-main {
-            /* Imagen de un setup gaming o circuito */
             background-image: url('https://images.unsplash.com/photo-1593640408182-31c70c8268f5?q=80&w=1920&auto=format&fit=crop');
             background-attachment: fixed;
-            /* Esto hace que la imagen se quede quieta al bajar */
             background-size: cover;
             background-position: center;
             min-height: 100vh;
             padding-bottom: 50px;
         }
 
-        /* NAVBAR CRISTALINO */
         .navbar {
             background-color: rgba(0, 0, 0, 0.9) !important;
             border-bottom: 2px solid var(--neon-green);
@@ -77,7 +70,6 @@
             box-shadow: 0 0 20px var(--neon-green);
         }
 
-        /* EFECTO CRISTAL EN TARJETAS */
         .glass-card {
             background: var(--glass-bg);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -92,14 +84,12 @@
             border-color: var(--neon-blue);
         }
 
-        /* SECCIÓN HERO (PORTADA) */
         .hero-overlay {
             background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), #000);
             padding-top: 150px;
             padding-bottom: 100px;
         }
 
-        /* SECCIONES INTERNAS */
         .section-title {
             border-left: 5px solid var(--neon-green);
             padding-left: 15px;
@@ -113,17 +103,30 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
-            <a class="navbar-brand text-neon" href="#"><i class="bi bi-cpu"></i> BITFORGE</a>
+            <a class="navbar-brand text-neon" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navContent">
                 <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link active" href="#">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">PCs Armadas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Componentes</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'home' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'catalogo' %}">Catálogo</a></li>
 
                     {% if user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'mis_solicitudes' %}">Mis Solicitudes</a></li>
+
+                    {% if user.is_staff %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-info" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-shield-lock"></i> Admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item" href="{% url 'solicitudes_admin' %}">Ver Solicitudes</a></li>
+                            <li><a class="dropdown-item" href="/admin/">Panel Django</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+
                     <li class="nav-item ms-3">
                         <span class="text-white small">Hola, {{ user.username }}</span>
                     </li>
@@ -137,15 +140,20 @@
                     <li class="nav-item ms-3">
                         <a href="{% url 'login' %}" class="btn btn-neon btn-sm">Acceder</a>
                     </li>
+                    <li class="nav-item ms-2">
+                        <a href="{% url 'registro' %}" class="btn btn-outline-light btn-sm">Registro</a>
+                    </li>
                     {% endif %}
 
                     <li class="nav-item ms-3">
                         <a href="{% url 'ver_carrito' %}" class="btn btn-light rounded-circle position-relative">
                             <i class="bi bi-cart-fill text-dark"></i>
+                            {% if user.is_authenticated %}
                             <span
                                 class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                {{ request.user.carritoitem_set.count|default:"0" }}
+                                {{ user.carritoitem_set.count }}
                             </span>
+                            {% endif %}
                         </a>
                     </li>
                 </ul>
@@ -160,7 +168,7 @@
             <p class="lead text-light mb-5">Tienda especializada en High-End Gaming y Workstations.<br>Precios
                 actualizados vía API Global.</p>
             <div class="d-flex justify-content-center gap-3">
-                <a href="#catalogo" class="btn btn-neon btn-lg px-5">Ver Catálogo</a>
+                <a href="{% url 'catalogo' %}" class="btn btn-neon btn-lg px-5">Ver Catálogo</a>
                 <a href="{% url 'importar_precios' %}" class="btn btn-outline-light btn-lg">
                     <i class="bi bi-cloud-arrow-down"></i> Sincronizar Precios
                 </a>
@@ -192,7 +200,13 @@
                             </div>
                         </div>
 
-                        <button class="btn btn-warning mt-4 fw-bold">Crear Solicitud Especial</button>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'mis_solicitudes' %}" class="btn btn-warning mt-4 fw-bold">Ver Mis
+                            Solicitudes</a>
+                        {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-warning mt-4 fw-bold">Inicia Sesión para
+                            Solicitar</a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -204,23 +218,25 @@
                 <div class="col-md-4 col-lg-3">
                     <div class="glass-card h-100">
                         <div style="height: 200px; overflow: hidden; position: relative;">
-                            <img src="{{ p.imagen_url|default:'https://via.placeholder.com/300x300?text=Hardware' }}"
-                                class="w-100 h-100 object-fit-cover" alt="{{ p.nombre }}">
-
+                            <a href="{% url 'detalle_producto' p.id %}">
+                                <img src="{{ p.imagen_url|default:'https://via.placeholder.com/300x300?text=Hardware' }}"
+                                    class="w-100 h-100" style="object-fit: contain; background: #fff;"
+                                    alt="{{ p.nombre }}">
+                            </a>
                             <span
                                 class="position-absolute top-0 end-0 bg-primary text-white px-2 py-1 m-2 rounded small fw-bold">
-                                {{ p.get_categoria_display }}
+                                {{ p.get_tipo_display }}
                             </span>
                         </div>
 
                         <div class="p-3">
-                            <h5 class="text-white mb-1">{{ p.nombre }}</h5>
+                            <h5 class="text-white mb-1">{{ p.nombre|truncatewords:5 }}</h5>
 
                             <div class="d-flex justify-content-between align-items-center my-3">
                                 <span class="fs-4 text-neon fw-bold">${{ p.precio }}</span>
                                 {% if p.stock > 0 %}
-                                <span class="badge bg-success bg-opacity-25 text-success border border-success">En
-                                    Stock</span>
+                                <span class="badge bg-success bg-opacity-25 text-success border border-success">{{
+                                    p.get_estado_stock }}</span>
                                 {% else %}
                                 <span
                                     class="badge bg-danger bg-opacity-25 text-danger border border-danger">Agotado</span>
@@ -232,9 +248,9 @@
                                 <i class="bi bi-cart-plus"></i> Agregar
                             </a>
                             {% else %}
-                            <button class="btn btn-outline-warning w-100">
+                            <a href="{% url 'crear_solicitud' p.id %}" class="btn btn-outline-warning w-100">
                                 <i class="bi bi-exclamation-circle"></i> Solicitar a Proveedor
-                            </button>
+                            </a>
                             {% endif %}
                         </div>
                     </div>
@@ -249,6 +265,7 @@
 
         </div>
     </div>
+
     <footer class="bg-black text-secondary text-center py-4 border-top border-dark">
         <div class="container">
             <small>BITFORGE SYSTEMS &copy; 2024 | Sistema de Gestión de Hardware v1.0</small>

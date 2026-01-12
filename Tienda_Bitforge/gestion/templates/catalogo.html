@@ -1,0 +1,214 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo | BitForge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --neon-green: #00ff88;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-green);
+        }
+
+        .brand-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-green);
+        }
+
+        .filter-sidebar {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .glass-card {
+            background: rgba(30, 30, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: scale(1.03);
+            border-color: var(--neon-green);
+        }
+
+        .glass-card img {
+            height: 180px;
+            object-fit: contain;
+            background: #fff;
+        }
+
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+
+        .btn-neon:hover {
+            background: var(--neon-green);
+            color: #000;
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+        }
+
+        .form-control,
+        .form-select {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+            color: #fff;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: rgba(0, 0, 0, 0.7);
+            border-color: var(--neon-green);
+            color: #fff;
+        }
+
+        .category-btn {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #444;
+            color: #ccc;
+            transition: 0.3s;
+        }
+
+        .category-btn:hover,
+        .category-btn.active {
+            border-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container">
+            <a class="navbar-brand brand-title" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-house"></i> Inicio</a>
+                <a href="{% url 'ver_carrito' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-cart"></i>
+                    Carrito</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row">
+            <!-- Sidebar Filtros -->
+            <div class="col-lg-3 mb-4">
+                <div class="filter-sidebar">
+                    <h5 class="mb-3"><i class="bi bi-funnel text-neon"></i> Filtros</h5>
+
+                    <form method="get" action="">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Buscar</label>
+                            <input type="text" name="q" class="form-control" placeholder="Nombre del producto..."
+                                value="{{ busqueda|default:'' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Categoría</label>
+                            <select name="categoria" class="form-select">
+                                <option value="">Todas</option>
+                                {% for cat in categorias %}
+                                <option value="{{ cat.id }}" {% if categoria_actual==cat.id|stringformat:"s"
+                                    %}selected{% endif %}>
+                                    {{ cat.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-neon w-100">
+                            <i class="bi bi-search"></i> Filtrar
+                        </button>
+
+                        {% if busqueda or categoria_actual %}
+                        <a href="{% url 'catalogo' %}" class="btn btn-outline-secondary w-100 mt-2">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Productos -->
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-grid text-neon"></i> Catálogo</h2>
+                    <span class="badge bg-secondary fs-6">{{ productos.count }} productos</span>
+                </div>
+
+                <div class="row g-4">
+                    {% for p in productos %}
+                    <div class="col-md-4">
+                        <div class="glass-card h-100">
+                            <a href="{% url 'detalle_producto' p.id %}">
+                                <img src="{{ p.imagen_url|default:'https://via.placeholder.com/300x200?text=Hardware' }}"
+                                    class="w-100" alt="{{ p.nombre }}">
+                            </a>
+                            <div class="p-3">
+                                <span class="badge bg-primary mb-2">{{ p.categoria.nombre }}</span>
+                                <h6 class="text-white mb-1">{{ p.nombre|truncatewords:6 }}</h6>
+
+                                <div class="d-flex justify-content-between align-items-center my-2">
+                                    <span class="fs-5 text-neon fw-bold">${{ p.precio }}</span>
+                                    {% if p.stock > 0 %}
+                                    <span class="badge bg-success">{{ p.get_estado_stock }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Agotado</span>
+                                    {% endif %}
+                                </div>
+
+                                {% if p.stock > 0 %}
+                                <a href="{% url 'agregar_carrito' p.id %}" class="btn btn-neon btn-sm w-100">
+                                    <i class="bi bi-cart-plus"></i> Agregar
+                                </a>
+                                {% else %}
+                                <a href="{% url 'crear_solicitud' p.id %}" class="btn btn-outline-warning btn-sm w-100">
+                                    <i class="bi bi-box-seam"></i> Solicitar
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-search text-secondary" style="font-size: 4rem;"></i>
+                        <h4 class="text-secondary mt-3">No se encontraron productos</h4>
+                        <a href="{% url 'catalogo' %}" class="btn btn-outline-light mt-3">Ver todos</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
