@@ -70,4 +70,31 @@ def actualizar_cantidad(request, item_id):
             item.delete()
     return redirect('ver_carrito')
 
+# Vista de crear solicitud
+@login_required
+def crear_solicitud(request, producto_id):
+    producto = Producto.objects.get(id=producto_id)
+    
+    if request.method == 'POST':
+        nota = request.POST.get('nota', '')
+        cantidad = int(request.POST.get('cantidad', 1))
+        
+        Solicitud.objects.create(
+            cliente=request.user,
+            producto=producto,
+            cantidad=cantidad,
+            nota_cliente=nota
+        )
+        messages.success(request, f'Solicitud de {producto.nombre} enviada correctamente')
+        return redirect('mis_solicitudes')
+    
+    return render(request, 'crear_solicitud.html', {'producto': producto})
+
+# Vista de mis solicitudes
+@login_required
+def mis_solicitudes(request):
+    solicitudes = Solicitud.objects.filter(cliente=request.user)
+    return render(request, 'mis_solicitudes.html', {'solicitudes': solicitudes})
+
+
 # Create your views here.
