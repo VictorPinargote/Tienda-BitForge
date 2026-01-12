@@ -104,9 +104,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-ec' #cambio para el idioma del sitio a ecuador 
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Guayaquil' #cambio para la zona horaria del ecuador
 
 USE_I18N = True
 
@@ -117,3 +117,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Configuración de Autenticación
+LOGIN_URL = 'login'  # A dónde redirigir si no está logueado
+LOGIN_REDIRECT_URL = 'home'  # A dónde ir después de login
+LOGOUT_REDIRECT_URL = 'home'  # A dónde ir después de logout
+
