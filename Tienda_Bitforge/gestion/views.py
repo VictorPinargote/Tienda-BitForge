@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm #Formulario para creación de usuario
 from django.contrib import messages #Mensajes de confirmación
 from .models import Producto, CarritoItem, Solicitud
+from django.contrib.admin.views.decorators import staff_member_required
 
 # Vista principal - Página de inicio
 def home(request):
@@ -96,5 +97,26 @@ def mis_solicitudes(request):
     solicitudes = Solicitud.objects.filter(cliente=request.user)
     return render(request, 'mis_solicitudes.html', {'solicitudes': solicitudes})
 
+# Vista de solicitudes admin
+@staff_member_required
+def ver_solicitudes_admin(request):
+    solicitudes = Solicitud.objects.all()
+    return render(request, 'admin/solicitudes_admin.html', {'solicitudes': solicitudes})
+
+# Vista de marcar solicitud como completada
+@staff_member_required
+def marcar_completada(request, solicitud_id):
+    solicitud = Solicitud.objects.get(id=solicitud_id)
+    solicitud.estado = 'completada'
+    solicitud.save()
+    
+    # Aumentar stock del producto
+    solicitud.producto.stock += solicitud.cantidad
+    solicitud.producto.save()
+    
+    messages.success(request, f'Solicitud #{solicitud.id} completada y stock actualizado')
+    return redirect('solicitudes_admin')
+
+    
 
 # Create your views here.
