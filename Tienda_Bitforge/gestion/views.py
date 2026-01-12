@@ -181,5 +181,23 @@ def catalogo(request):
         'busqueda': busqueda
     })
 
+# Vista de gestion de stock
+@staff_member_required
+def gestion_stock(request):
+    productos = Producto.objects.all().order_by('stock')
+    return render(request, 'admin/gestion_stock.html', {'productos': productos})
+
+# Vista de actualizar stock
+@staff_member_required
+def actualizar_stock(request, producto_id):
+    if request.method == 'POST':
+        producto = Producto.objects.get(id=producto_id)
+        nuevo_stock = int(request.POST.get('stock', 0))
+        producto.stock = nuevo_stock
+        producto.save()
+        messages.success(request, f'Stock de {producto.nombre} actualizado a {nuevo_stock}')
+    return redirect('gestion_stock')
+
+
 
 # Create your views here.

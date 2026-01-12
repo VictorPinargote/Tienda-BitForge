@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Stock | BitForge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-blue: #00ccff;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid #ff6600;
+        }
+
+        .brand-title {
+            font-family: 'Orbitron', sans-serif;
+            color: #ff6600;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #ff6600, #ff9900);
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+        }
+
+        .page-container {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255, 102, 0, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .stock-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .stock-card:hover {
+            border-color: #ff6600;
+        }
+
+        .stock-low {
+            border-left: 4px solid #dc3545;
+        }
+
+        .stock-medium {
+            border-left: 4px solid #ffc107;
+        }
+
+        .stock-high {
+            border-left: 4px solid #28a745;
+        }
+
+        .stock-input {
+            width: 80px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .stock-input:focus {
+            border-color: #ff6600;
+            outline: none;
+        }
+
+        .btn-update {
+            background: #ff6600;
+            border: none;
+            color: #fff;
+        }
+
+        .btn-update:hover {
+            background: #ff8833;
+            box-shadow: 0 0 15px rgba(255, 102, 0, 0.5);
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container">
+            <a class="navbar-brand brand-title" href="{% url 'home' %}">
+                <i class="bi bi-cpu"></i> BITFORGE
+                <span class="admin-badge">BODEGA</span>
+            </a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'solicitudes_admin' %}" class="btn btn-outline-info btn-sm"><i
+                        class="bi bi-list-check"></i> Solicitudes</a>
+                <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-house"></i> Inicio</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-box-seam" style="color: #ff6600;"></i> Gestión de Stock</h2>
+            <span class="badge bg-secondary fs-6">{{ productos.count }} productos</span>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="p-3 rounded bg-danger bg-opacity-25 border border-danger text-center">
+                    <h4 class="mb-0">{{ productos|length }} - Sin Stock</h4>
+                    <small>Productos agotados</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 rounded bg-warning bg-opacity-25 border border-warning text-center">
+                    <h4 class="mb-0">Stock Bajo</h4>
+                    <small>Menos de 5 unidades</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3 rounded bg-success bg-opacity-25 border border-success text-center">
+                    <h4 class="mb-0">Stock OK</h4>
+                    <small>Más de 5 unidades</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-container">
+            {% if productos %}
+            {% for p in productos %}
+            <div
+                class="stock-card {% if p.stock == 0 %}stock-low{% elif p.stock <= 5 %}stock-medium{% else %}stock-high{% endif %}">
+                <div class="row align-items-center">
+                    <div class="col-md-1 text-center">
+                        <img src="{{ p.imagen_url|default:'https://via.placeholder.com/50' }}" alt="{{ p.nombre }}"
+                            style="width: 50px; height: 50px; object-fit: contain; background: #fff; border-radius: 5px;">
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="mb-0">{{ p.nombre }}</h6>
+                        <small class="text-muted">{{ p.categoria.nombre }} | ${{ p.precio }}</small>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <span
+                            class="badge {% if p.stock == 0 %}bg-danger{% elif p.stock <= 5 %}bg-warning text-dark{% else %}bg-success{% endif %} fs-6">
+                            {{ p.stock }} uds
+                        </span>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <span class="text-muted">{{ p.get_estado_stock }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <form action="{% url 'actualizar_stock' p.id %}" method="post"
+                            class="d-flex gap-2 justify-content-end">
+                            {% csrf_token %}
+                            <input type="number" name="stock" value="{{ p.stock }}" min="0" class="stock-input">
+                            <button type="submit" class="btn btn-update btn-sm">
+                                <i class="bi bi-arrow-repeat"></i> Actualizar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox text-secondary" style="font-size: 4rem;"></i>
+                <h4 class="text-secondary mt-3">No hay productos registrados</h4>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

@@ -26,4 +26,8 @@ urlpatterns = [
     path('importar-precios/', views.importar_precios, name='importar_precios'),
     path('producto/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
     path('catalogo/', views.catalogo, name='catalogo'),
+
+    # Bodega/Stock
+    path('admin/stock/', views.gestion_stock, name='gestion_stock'),
+    path('admin/stock/actualizar/<int:producto_id>/', views.actualizar_stock, name='actualizar_stock'),
 ]
