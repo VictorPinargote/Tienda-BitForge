@@ -2,8 +2,9 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm #Formulario para creación de usuario
 from django.contrib import messages #Mensajes de confirmación
-from .models import Producto, CarritoItem, Solicitud
+from .models import Producto, CarritoItem, Solicitud, Categoria
 from django.contrib.admin.views.decorators import staff_member_required
+import requests
 
 # Vista principal - Página de inicio
 def home(request):
@@ -117,6 +118,68 @@ def marcar_completada(request, solicitud_id):
     messages.success(request, f'Solicitud #{solicitud.id} completada y stock actualizado')
     return redirect('solicitudes_admin')
 
+# Vista de importar precios
+def importar_precios(request):
+    url = "https://fakestoreapi.com/products?limit=8"
     
+    try:
+        response = requests.get(url, timeout=10)
+        productos_api = response.json()
+        
+        from .models import Categoria
+        categoria, _ = Categoria.objects.get_or_create(
+            nombre='Importados',
+            defaults={'descripcion': 'Productos importados via API'}
+        )
+        
+        for item in productos_api:
+            Producto.objects.update_or_create(
+                nombre=item['title'][:50],
+                defaults={
+                    'descripcion': item['description'],
+                    'precio': item['price'],
+                    'stock': 10,
+                    'imagen_url': item['image'],
+                    'categoria': categoria,
+                    'disponible': True
+                }
+            )
+        
+        messages.success(request, f'{len(productos_api)} productos sincronizados desde API')
+    except Exception as e:
+        messages.error(request, f'Error al importar: {str(e)}')
+    
+    return redirect('home')
+
+# Vista del detalle del producto
+def detalle_producto(request, producto_id):
+    producto = Producto.objects.get(id=producto_id)
+    relacionados = Producto.objects.filter(categoria=producto.categoria).exclude(id=producto_id)[:4]
+    return render(request, 'detalle_producto.html', {
+        'producto': producto,
+        'relacionados': relacionados
+    })
+
+# Vista del catalogo
+def catalogo(request):
+    productos = Producto.objects.filter(disponible=True)
+    categorias = Categoria.objects.all()
+    
+    # Filtros
+    categoria_id = request.GET.get('categoria')
+    busqueda = request.GET.get('q')
+    
+    if categoria_id:
+        productos = productos.filter(categoria_id=categoria_id)
+    if busqueda:
+        productos = productos.filter(nombre__icontains=busqueda)
+    
+    return render(request, 'catalogo.html', {
+        'productos': productos,
+        'categorias': categorias,
+        'categoria_actual': categoria_id,
+        'busqueda': busqueda
+    })
+
 
 # Create your views here.

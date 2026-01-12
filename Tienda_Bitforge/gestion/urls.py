@@ -21,4 +21,9 @@ urlpatterns = [
     # Admin/Staff
     path('admin/solicitudes/', views.ver_solicitudes_admin, name='solicitudes_admin'),
     path('admin/solicitud/completar/<int:solicitud_id>/', views.marcar_completada, name='marcar_completada'),
+
+    # API y Catálogo
+    path('importar-precios/', views.importar_precios, name='importar_precios'),
+    path('producto/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
+    path('catalogo/', views.catalogo, name='catalogo'),
 ]
