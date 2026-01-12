@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User 
 
 # Create your models here.
 
@@ -40,8 +41,8 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=50)
     descripcion = models.TextField(blank=True, null=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.PositiveBigIntegerField(default=0)
-    imagen_url = models.URLField(blank=True, null=True)
+    stock = models.PositiveBigIntegerField(default=0) #positivebigintegerfield permite que el campo sea un numero entero positivo
+    imagen_url = models.URLField(blank=True, null=True) #urlfield permite que el campo sea una url
     #relacion con la categoria 
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE)
     #on_delete=models.CASCADE significa que si se elimina la categoria, se eliminan todos los productos
@@ -65,4 +66,23 @@ class Producto(models.Model):
         else:
             return "Disponible"
 
+#modelo de solicitud
+class Solicitud(models.Model):
+    #Estados de la solicitud
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('completada', 'Completada'),
+    ]
+    cliente = models.ForeignKey(User, on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField(default=1)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    nota_cliente = models.TextField(blank=True)
     
+    def __str__(self):
+        return f"Solicitud #{self.id} - {self.producto.nombre}"
+    class Meta:
+        verbose_name_plural = "Solicitudes"
+        ordering = ['-fecha_solicitud']
+
