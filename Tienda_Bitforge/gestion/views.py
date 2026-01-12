@@ -198,6 +198,20 @@ def actualizar_stock(request, producto_id):
         messages.success(request, f'Stock de {producto.nombre} actualizado a {nuevo_stock}')
     return redirect('gestion_stock')
 
-
-
+#Vista del panel admin+
+@staff_member_required  
+def panel_admin(request):
+    from django.db.models import Sum
+    
+    total_productos = Producto.objects.count()
+    productos_agotados = Producto.objects.filter(stock=0).count()
+    solicitudes_pendientes = Solicitud.objects.filter(estado='pendiente').count()
+    total_ventas = CarritoItem.objects.aggregate(Sum('cantidad'))['cantidad__sum'] or 0
+    
+    return render(request, 'admin/panel_admin.html', {
+        'total_productos': total_productos,
+        'productos_agotados': productos_agotados,
+        'solicitudes_pendientes': solicitudes_pendientes,
+        'total_ventas': total_ventas
+    })
 # Create your views here.
