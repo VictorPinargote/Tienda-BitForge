@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear Cuenta | BitForge</title>
+    <title>Registro | BitForge</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link
@@ -14,7 +14,6 @@
     <style>
         :root {
             --neon-green: #00ff88;
-            --neon-blue: #00ccff;
         }
 
         body {
@@ -24,17 +23,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
 
         .register-card {
             background: rgba(30, 30, 30, 0.9);
             border: 1px solid rgba(0, 255, 136, 0.3);
             border-radius: 15px;
-            backdrop-filter: blur(10px);
             padding: 40px;
-            max-width: 450px;
             width: 100%;
+            max-width: 500px;
         }
 
         .brand-title {
@@ -43,13 +40,15 @@
             text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
 
-        .form-control {
+        .form-control,
+        .form-select {
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid #444;
             color: #fff;
         }
 
-        .form-control:focus {
+        .form-control:focus,
+        .form-select:focus {
             background: rgba(0, 0, 0, 0.7);
             border-color: var(--neon-green);
             color: #fff;
@@ -61,7 +60,6 @@
             border: 2px solid var(--neon-green);
             color: var(--neon-green);
             font-weight: bold;
-            transition: 0.3s;
         }
 
         .btn-neon:hover {
@@ -70,116 +68,144 @@
             box-shadow: 0 0 20px var(--neon-green);
         }
 
-        .form-label {
-            color: #ccc;
+        .text-neon {
+            color: var(--neon-green);
         }
 
-        .help-text {
-            font-size: 0.8rem;
-            color: #888;
+        .role-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        .errorlist {
-            list-style: none;
-            padding: 0;
-            margin: 5px 0 0 0;
+        .role-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #444;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
         }
 
-        .errorlist li {
-            color: #ff6b6b;
-            font-size: 0.85rem;
+        .role-option:hover {
+            border-color: var(--neon-green);
+        }
+
+        .role-option.active {
+            border-color: var(--neon-green);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .role-option i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .bodeguero-field {
+            display: none;
+        }
+
+        .bodeguero-field.show {
+            display: block;
         }
     </style>
 </head>
 
 <body>
-    <div class="register-card">
-        <div class="text-center mb-4">
-            <i class="bi bi-person-plus text-success" style="font-size: 3rem;"></i>
-            <h2 class="brand-title mt-2">ÚNETE A BITFORGE</h2>
-            <p class="text-secondary">Crea tu cuenta para comenzar</p>
-        </div>
-
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endfor %}
-        {% endif %}
-
-        <form method="post">
-            {% csrf_token %}
-
-            <div class="mb-3">
-                <label class="form-label"><i class="bi bi-person"></i> Usuario</label>
-                {{ form.username }}
-                {% if form.username.errors %}
-                <ul class="errorlist">
-                    {% for error in form.username.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-                <small class="help-text">Letras, números y @/./+/-/_ únicamente.</small>
+    <div class="container">
+        <div class="register-card mx-auto">
+            <div class="text-center mb-4">
+                <h2 class="brand-title"><i class="bi bi-cpu"></i> BITFORGE</h2>
+                <p class="text-muted">Crear nueva cuenta</p>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label"><i class="bi bi-lock"></i> Contraseña</label>
-                {{ form.password1 }}
-                {% if form.password1.errors %}
-                <ul class="errorlist">
-                    {% for error in form.password1.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-                <small class="help-text">Mínimo 8 caracteres, no solo números.</small>
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
+            {% endfor %}
+            {% endif %}
 
-            <div class="mb-4">
-                <label class="form-label"><i class="bi bi-lock-fill"></i> Confirmar Contraseña</label>
-                {{ form.password2 }}
-                {% if form.password2.errors %}
-                <ul class="errorlist">
-                    {% for error in form.password2.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </div>
+            <form method="post" id="registerForm">
+                {% csrf_token %}
 
-            <button type="submit" class="btn btn-neon w-100 py-2">
-                <i class="bi bi-person-check"></i> Crear Cuenta
-            </button>
-        </form>
+                <!-- Selector de Rol -->
+                <label class="form-label text-muted small">Tipo de cuenta</label>
+                <div class="role-selector">
+                    <div class="role-option active" data-role="cliente" onclick="selectRole('cliente')">
+                        <i class="bi bi-person text-neon"></i>
+                        <strong>Cliente</strong>
+                        <small class="d-block text-muted">Comprar y solicitar</small>
+                    </div>
+                    <div class="role-option" data-role="bodeguero" onclick="selectRole('bodeguero')">
+                        <i class="bi bi-box-seam" style="color: #ff6600;"></i>
+                        <strong>Bodeguero</strong>
+                        <small class="d-block text-muted">Gestionar stock</small>
+                    </div>
+                </div>
+                <input type="hidden" name="rol" id="rolInput" value="cliente">
 
-        <hr class="border-secondary my-4">
+                <!-- Campo secreto para Bodeguero -->
+                <div class="mb-3 bodeguero-field" id="codigoField">
+                    <label class="form-label">Código de Bodega <span class="text-danger">*</span></label>
+                    <input type="password" name="codigo_bodega" class="form-control"
+                        placeholder="Ingresa el código secreto">
+                    <small class="text-muted">Solicita este código al administrador</small>
+                </div>
 
-        <div class="text-center">
-            <p class="text-secondary mb-2">¿Ya tienes cuenta?</p>
-            <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">
-                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
-            </a>
-        </div>
+                <!-- Campos del formulario -->
+                <div class="mb-3">
+                    <label class="form-label">Nombre de usuario</label>
+                    <input type="text" name="username" class="form-control" placeholder="Tu nombre de usuario" required>
+                </div>
 
-        <div class="text-center mt-4">
-            <a href="{% url 'home' %}" class="text-secondary text-decoration-none">
-                <i class="bi bi-arrow-left"></i> Volver al inicio
-            </a>
+                <div class="mb-3">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" name="password1" class="form-control" placeholder="Mínimo 8 caracteres"
+                        required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Confirmar contraseña</label>
+                    <input type="password" name="password2" class="form-control" placeholder="Repite la contraseña"
+                        required>
+                </div>
+
+                <button type="submit" class="btn btn-neon w-100 py-2 mb-3">
+                    <i class="bi bi-person-plus"></i> Crear Cuenta
+                </button>
+
+                <p class="text-center text-muted mb-0">
+                    ¿Ya tienes cuenta? <a href="{% url 'login' %}" class="text-neon">Iniciar Sesión</a>
+                </p>
+            </form>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Agregar clase form-control a los inputs del formulario de Django
-        document.querySelectorAll('input').forEach(input => {
-            if (!input.classList.contains('btn-close')) {
-                input.classList.add('form-control');
+        function selectRole(role) {
+            // Actualizar visual
+            document.querySelectorAll('.role-option').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.role-option[data-role="${role}"]`).classList.add('active');
+
+            // Actualizar input hidden
+            document.getElementById('rolInput').value = role;
+
+            // Mostrar/ocultar campo de código
+            const codigoField = document.getElementById('codigoField');
+            if (role === 'bodeguero') {
+                codigoField.classList.add('show');
+            } else {
+                codigoField.classList.remove('show');
             }
-        });
+        }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

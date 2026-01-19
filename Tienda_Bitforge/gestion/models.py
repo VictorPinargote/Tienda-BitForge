@@ -102,4 +102,170 @@ class CarritoItem(models.Model):
     
     def subtotal(self):
         return self.producto.precio * self.cantidad
+
+
+# ============================================
+# NUEVOS MODELOS - MEJORAS BITFORGE
+# ============================================
+
+# Modelo de Pedido (Order)
+class Pedido(models.Model):
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('procesando', 'Procesando'),
+        ('enviado', 'Enviado'),
+        ('entregado', 'Entregado'),
+        ('cancelado', 'Cancelado'),
+    ]
+    
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    numero_pedido = models.CharField(max_length=20, unique=True, editable=False)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    
+    # Información de envío
+    nombre_completo = models.CharField(max_length=100)
+    telefono = models.CharField(max_length=20)
+    direccion = models.TextField()
+    ciudad = models.CharField(max_length=50)
+    notas = models.TextField(blank=True)
+    
+    # Fechas
+    fecha_pedido = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    # Cupón aplicado (opcional)
+    cupon_aplicado = models.ForeignKey('Cupon', on_delete=models.SET_NULL, null=True, blank=True)
+    descuento_aplicado = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    class Meta:
+        ordering = ['-fecha_pedido']
+        verbose_name_plural = "Pedidos"
+    
+    def save(self, *args, **kwargs):
+        if not self.numero_pedido:
+            import random
+            import string
+            self.numero_pedido = 'BF' + ''.join(random.choices(string.digits, k=8))
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"Pedido #{self.numero_pedido} - {self.usuario.username}"
+
+
+# Modelo de Items del Pedido
+class PedidoItem(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='items')
+    producto = models.ForeignKey(Producto, on_delete=models.SET_NULL, null=True)
+    nombre_producto = models.CharField(max_length=100)  # Guardamos el nombre por si se elimina el producto
+    cantidad = models.PositiveIntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def subtotal(self):
+        return self.precio_unitario * self.cantidad
+    
+    def __str__(self):
+        return f"{self.nombre_producto} x{self.cantidad}"
+
+
+# Modelo de Reseña (Review)
+class Resena(models.Model):
+    CALIFICACION_CHOICES = [(i, str(i)) for i in range(1, 6)]  # 1 a 5 estrellas
+    
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='resenas')
+    calificacion = models.IntegerField(choices=CALIFICACION_CHOICES)
+    titulo = models.CharField(max_length=100)
+    comentario = models.TextField()
+    fecha = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('usuario', 'producto')  # Un usuario solo puede reseñar un producto una vez
+        ordering = ['-fecha']
+        verbose_name_plural = "Reseñas"
+    
+    def __str__(self):
+        return f"Reseña de {self.usuario.username} - {self.producto.nombre}"
+
+
+# Modelo de Lista de Deseos (Wishlist)
+class ListaDeseos(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('usuario', 'producto')
+        verbose_name_plural = "Listas de Deseos"
+    
+    def __str__(self):
+        return f"{self.usuario.username} - {self.producto.nombre}"
+
+
+# Modelo de Cupón de Descuento
+class Cupon(models.Model):
+    codigo = models.CharField(max_length=20, unique=True)
+    descripcion = models.CharField(max_length=100)
+    descuento_porcentaje = models.PositiveIntegerField()  # Porcentaje de descuento (1-100)
+    descuento_maximo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Tope máximo
+    compra_minima = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Compra mínima requerida
+    activo = models.BooleanField(default=True)
+    fecha_expiracion = models.DateField()
+    usos_maximos = models.PositiveIntegerField(default=100)
+    usos_actuales = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        verbose_name_plural = "Cupones"
+    
+    def esta_vigente(self):
+        from django.utils import timezone
+        hoy = timezone.now().date()
+        return self.activo and self.fecha_expiracion >= hoy and self.usos_actuales < self.usos_maximos
+    
+    def __str__(self):
+        return f"{self.codigo} - {self.descuento_porcentaje}%"
+
+
+# Modelo de Perfil de Usuario Extendido
+class PerfilUsuario(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
+    telefono = models.CharField(max_length=20, blank=True)
+    direccion = models.TextField(blank=True)
+    ciudad = models.CharField(max_length=50, blank=True)
+    avatar_url = models.URLField(blank=True, null=True)
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Perfil de {self.usuario.username}"
+    
+    class Meta:
+        verbose_name_plural = "Perfiles de Usuario"
+
+
+# Modelo de Suscripción Newsletter
+class SuscripcionNewsletter(models.Model):
+    email = models.EmailField(unique=True)
+    nombre = models.CharField(max_length=50, blank=True)
+    fecha_suscripcion = models.DateTimeField(auto_now_add=True)
+    activo = models.BooleanField(default=True)
+    
+    class Meta:
+        verbose_name_plural = "Suscripciones Newsletter"
+    
+    def __str__(self):
+        return self.email
+
+
+# Modelo para Productos Comparados (sesión temporal)
+class ProductoComparado(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('usuario', 'producto')
+        verbose_name_plural = "Productos Comparados"
+    
+    def __str__(self):
+        return f"{self.usuario.username} compara {self.producto.nombre}"
     

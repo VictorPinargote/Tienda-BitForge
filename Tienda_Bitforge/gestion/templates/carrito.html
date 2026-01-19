@@ -76,6 +76,20 @@
             box-shadow: 0 0 20px var(--neon-green);
         }
 
+        .btn-checkout {
+            background: linear-gradient(135deg, var(--neon-green), #00cc6a);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-checkout:hover {
+            box-shadow: 0 0 30px var(--neon-green);
+            transform: scale(1.02);
+            color: #000;
+        }
+
         .quantity-input {
             width: 70px;
             background: rgba(0, 0, 0, 0.5);
@@ -121,7 +135,8 @@
 
         {% if messages %}
         {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+            role="alert">
             {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -136,7 +151,7 @@
                     <div class="cart-item">
                         <div class="row align-items-center">
                             <div class="col-auto">
-                                <img src="{{ item.producto.imagen_url|default:'https://via.placeholder.com/80x80?text=HW' }}"
+                                <img src="{{ item.producto.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=80' }}"
                                     alt="{{ item.producto.nombre }}">
                             </div>
                             <div class="col">
@@ -148,8 +163,9 @@
                             <div class="col-auto text-center">
                                 <form action="{% url 'actualizar_cantidad' item.id %}" method="post" class="d-inline">
                                     {% csrf_token %}
-                                    <input type="number" name="cantidad" value="{{ item.cantidad }}" min="0" max="99"
-                                        class="quantity-input" onchange="this.form.submit()">
+                                    <input type="number" name="cantidad" value="{{ item.cantidad }}" min="0"
+                                        max="{{ item.producto.stock }}" class="quantity-input"
+                                        onchange="this.form.submit()">
                                 </form>
                             </div>
                             <div class="col-auto text-end">
@@ -198,9 +214,9 @@
                         <span class="fs-4 text-neon fw-bold">${{ total }}</span>
                     </div>
 
-                    <button class="btn btn-neon w-100 py-2">
-                        <i class="bi bi-credit-card"></i> Proceder al Pago
-                    </button>
+                    <a href="{% url 'finalizar_compra' %}" class="btn btn-checkout w-100 py-3 fs-5">
+                        <i class="bi bi-credit-card"></i> Finalizar Compra
+                    </a>
 
                     <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 mt-2">
                         <i class="bi bi-arrow-left"></i> Seguir Comprando

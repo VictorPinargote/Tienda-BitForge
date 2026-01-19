@@ -113,16 +113,28 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'catalogo' %}">Catálogo</a></li>
 
                     {% if user.is_authenticated %}
+                    {# SOLO CLIENTES ven Mis Solicitudes #}
+                    {% if not user.is_staff %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'mis_solicitudes' %}">Mis Solicitudes</a></li>
+                    {% endif %}
 
+                    {# SOLO STAFF/ADMIN ve el menú Admin #}
                     {% if user.is_staff %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-info" href="#" data-bs-toggle="dropdown">
                             <i class="bi bi-shield-lock"></i> Admin
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark">
-                            <li><a class="dropdown-item" href="{% url 'solicitudes_admin' %}">Ver Solicitudes</a></li>
-                            <li><a class="dropdown-item" href="/admin/">Panel Django</a></li>
+                            <li><a class="dropdown-item" href="{% url 'panel_admin' %}"><i
+                                        class="bi bi-speedometer2"></i> Panel Control</a></li>
+                            <li><a class="dropdown-item" href="{% url 'solicitudes_admin' %}"><i
+                                        class="bi bi-list-check"></i> Ver Solicitudes</a></li>
+                            <li><a class="dropdown-item" href="{% url 'gestion_stock' %}"><i class="bi bi-boxes"></i>
+                                    Gestión Stock</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="/admin/"><i class="bi bi-gear"></i> Django Admin</a></li>
                         </ul>
                     </li>
                     {% endif %}
@@ -145,17 +157,18 @@
                     </li>
                     {% endif %}
 
+                    {# CARRITO SOLO PARA CLIENTES LOGUEADOS (no admin) #}
+                    {% if user.is_authenticated and not user.is_staff %}
                     <li class="nav-item ms-3">
                         <a href="{% url 'ver_carrito' %}" class="btn btn-light rounded-circle position-relative">
                             <i class="bi bi-cart-fill text-dark"></i>
-                            {% if user.is_authenticated %}
                             <span
                                 class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                 {{ user.carritoitem_set.count }}
                             </span>
-                            {% endif %}
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -169,14 +182,31 @@
                 actualizados vía API Global.</p>
             <div class="d-flex justify-content-center gap-3">
                 <a href="{% url 'catalogo' %}" class="btn btn-neon btn-lg px-5">Ver Catálogo</a>
+                {# SINCRONIZAR PRECIOS SOLO PARA ADMIN #}
+                {% if user.is_staff %}
                 <a href="{% url 'importar_precios' %}" class="btn btn-outline-light btn-lg">
                     <i class="bi bi-cloud-arrow-down"></i> Sincronizar Precios
                 </a>
+                {% endif %}
             </div>
         </div>
 
+        {% if messages %}
+        <div class="container">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <div class="container" id="catalogo">
 
+            {# SECCIÓN SOLICITUDES SOLO PARA CLIENTES #}
+            {% if user.is_authenticated and not user.is_staff %}
             <div class="row mb-5">
                 <div class="col-12">
                     <div class="p-5 rounded-3 text-white border border-secondary"
@@ -200,16 +230,26 @@
                             </div>
                         </div>
 
-                        {% if user.is_authenticated %}
                         <a href="{% url 'mis_solicitudes' %}" class="btn btn-warning mt-4 fw-bold">Ver Mis
                             Solicitudes</a>
-                        {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-warning mt-4 fw-bold">Inicia Sesión para
-                            Solicitar</a>
-                        {% endif %}
                     </div>
                 </div>
             </div>
+            {% endif %}
+
+            {# PARA USUARIOS NO LOGUEADOS #}
+            {% if not user.is_authenticated %}
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="p-4 rounded-3 text-white text-center" style="background: rgba(0,0,0,0.6);">
+                        <h3><i class="bi bi-person-plus text-neon"></i> ¿Nuevo en BitForge?</h3>
+                        <p>Regístrate para acceder al carrito, solicitudes y más.</p>
+                        <a href="{% url 'registro' %}" class="btn btn-neon">Crear Cuenta</a>
+                        <a href="{% url 'login' %}" class="btn btn-outline-light ms-2">Ya tengo cuenta</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <h2 class="section-title text-white">Stock Disponible</h2>
 
@@ -219,7 +259,7 @@
                     <div class="glass-card h-100">
                         <div style="height: 200px; overflow: hidden; position: relative;">
                             <a href="{% url 'detalle_producto' p.id %}">
-                                <img src="{{ p.imagen_url|default:'https://via.placeholder.com/300x300?text=Hardware' }}"
+                                <img src="{{ p.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=300' }}"
                                     class="w-100 h-100" style="object-fit: contain; background: #fff;"
                                     alt="{{ p.nombre }}">
                             </a>
@@ -243,6 +283,8 @@
                                 {% endif %}
                             </div>
 
+                            {# BOTONES SEGÚN USUARIO Y STOCK #}
+                            {% if user.is_authenticated and not user.is_staff %}
                             {% if p.stock > 0 %}
                             <a href="{% url 'agregar_carrito' p.id %}" class="btn btn-light w-100 fw-bold">
                                 <i class="bi bi-cart-plus"></i> Agregar
@@ -252,13 +294,26 @@
                                 <i class="bi bi-exclamation-circle"></i> Solicitar a Proveedor
                             </a>
                             {% endif %}
+                            {% elif not user.is_authenticated %}
+                            <a href="{% url 'login' %}" class="btn btn-outline-light w-100">
+                                <i class="bi bi-person"></i> Inicia sesión
+                            </a>
+                            {% else %}
+                            {# ADMIN/STAFF solo ve el detalle #}
+                            <a href="{% url 'detalle_producto' p.id %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-eye"></i> Ver Detalle
+                            </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
                 {% empty %}
                 <div class="col-12 text-center py-5">
-                    <h3 class="text-muted">No hay stock sincronizado aún.</h3>
-                    <p>Usa el botón "Sincronizar Precios" para cargar datos de la API.</p>
+                    <h3 class="text-muted">No hay productos disponibles.</h3>
+                    {% if user.is_staff %}
+                    <p>Usa el panel de admin para cargar productos.</p>
+                    <a href="{% url 'panel_admin' %}" class="btn btn-neon">Ir al Panel</a>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

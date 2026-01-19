@@ -92,6 +92,12 @@
         .text-neon {
             color: var(--neon-green);
         }
+
+        .utility-section {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 20px;
+        }
     </style>
 </head>
 
@@ -111,6 +117,16 @@
 
     <div class="container py-5">
         <h2 class="mb-4"><i class="bi bi-speedometer2" style="color: var(--neon-blue);"></i> Panel de Control</h2>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
 
         <!-- Stats -->
         <div class="row g-4 mb-5">
@@ -146,7 +162,7 @@
 
         <!-- Quick Actions -->
         <h4 class="mb-3"><i class="bi bi-lightning text-warning"></i> Acciones Rápidas</h4>
-        <div class="row g-4">
+        <div class="row g-4 mb-5">
             <div class="col-md-3">
                 <a href="{% url 'solicitudes_admin' %}" class="quick-action">
                     <i class="bi bi-list-check text-warning"></i>
@@ -162,7 +178,7 @@
             <div class="col-md-3">
                 <a href="{% url 'importar_precios' %}" class="quick-action">
                     <i class="bi bi-cloud-download text-info"></i>
-                    Sincronizar API
+                    Sincronizar Precios API
                 </a>
             </div>
             <div class="col-md-3">
@@ -170,6 +186,35 @@
                     <i class="bi bi-gear text-secondary"></i>
                     Django Admin
                 </a>
+            </div>
+        </div>
+
+        <!-- Utilidades -->
+        <h4 class="mb-3"><i class="bi bi-tools text-info"></i> Utilidades de Desarrollo</h4>
+        <div class="utility-section">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{% url 'cargar_productos' %}" class="btn btn-success w-100 py-3">
+                        <i class="bi bi-database-add fs-4 d-block mb-2"></i>
+                        Cargar Productos Hardware Demo
+                    </a>
+                    <small class="text-muted d-block mt-2 text-center">Crea 16 productos de hardware reales</small>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'limpiar_productos' %}" class="btn btn-danger w-100 py-3">
+                        <i class="bi bi-trash3 fs-4 d-block mb-2"></i>
+                        Limpiar Productos API
+                    </a>
+                    <small class="text-muted d-block mt-2 text-center">Elimina productos de la categoría
+                        "Importados"</small>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'catalogo' %}" class="btn btn-outline-light w-100 py-3">
+                        <i class="bi bi-eye fs-4 d-block mb-2"></i>
+                        Ver Catálogo Público
+                    </a>
+                    <small class="text-muted d-block mt-2 text-center">Vista del cliente</small>
+                </div>
             </div>
         </div>
     </div>
