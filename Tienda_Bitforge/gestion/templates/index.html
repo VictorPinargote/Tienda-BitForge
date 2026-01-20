@@ -17,6 +17,8 @@
         :root {
             --neon-green: #00ff88;
             --neon-blue: #00ccff;
+            --neon-pink: #ff0080;
+            --neon-orange: #ff6600;
             --dark-overlay: rgba(0, 0, 0, 0.75);
             --glass-bg: rgba(30, 30, 30, 0.85);
         }
@@ -76,12 +78,13 @@
             backdrop-filter: blur(5px);
             border-radius: 10px;
             overflow: hidden;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .glass-card:hover {
             transform: scale(1.03);
             border-color: var(--neon-blue);
+            box-shadow: 0 10px 40px rgba(0, 204, 255, 0.2);
         }
 
         .hero-overlay {
@@ -90,11 +93,277 @@
             padding-bottom: 100px;
         }
 
+        /* Hero Animations */
+        .hero-overlay h1 {
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .hero-overlay p {
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        .hero-overlay .btn {
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        .text-neon {
+            animation: neonGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes neonGlow {
+            from {
+                text-shadow: 0 0 10px rgba(0, 255, 136, 0.5), 0 0 20px rgba(0, 255, 136, 0.3);
+            }
+
+            to {
+                text-shadow: 0 0 20px rgba(0, 255, 136, 0.8), 0 0 40px rgba(0, 255, 136, 0.5), 0 0 60px rgba(0, 255, 136, 0.3);
+            }
+        }
+
+        /* Floating animation for cards */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .featured-card {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .featured-card:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .featured-card:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        .featured-card:nth-child(4) {
+            animation-delay: 1.5s;
+        }
+
         .section-title {
             border-left: 5px solid var(--neon-green);
             padding-left: 15px;
             margin-bottom: 30px;
             text-transform: uppercase;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .custom-toast {
+            background: var(--glass-bg);
+            border: 1px solid var(--neon-green);
+            border-radius: 10px;
+            color: #fff;
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.3s ease-out;
+            min-width: 300px;
+        }
+
+        .custom-toast.toast-success {
+            border-color: var(--neon-green);
+        }
+
+        .custom-toast.toast-error {
+            border-color: #dc3545;
+        }
+
+        .custom-toast.toast-warning {
+            border-color: var(--neon-orange);
+        }
+
+        .custom-toast.toast-info {
+            border-color: var(--neon-blue);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Live Search */
+        .search-container {
+            position: relative;
+        }
+
+        .live-search-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: #fff;
+            padding: 8px 20px;
+            width: 250px;
+            transition: all 0.3s;
+        }
+
+        .live-search-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            outline: none;
+            width: 300px;
+        }
+
+        .live-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(20, 20, 20, 0.98);
+            border: 1px solid var(--neon-green);
+            border-radius: 10px;
+            margin-top: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1000;
+        }
+
+        .search-results.show {
+            display: block;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .search-result-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 15px;
+            background: #fff;
+        }
+
+        .search-result-item .info h6 {
+            margin: 0;
+            color: #fff;
+        }
+
+        .search-result-item .info small {
+            color: var(--neon-green);
+        }
+
+        .search-loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--neon-green);
+        }
+
+        /* Quick Actions */
+        .quick-action-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: #fff;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glass-card:hover .quick-action-btn {
+            opacity: 1;
+        }
+
+        .quick-action-btn:hover {
+            background: var(--neon-pink);
+            transform: scale(1.1);
+        }
+
+        .quick-action-btn.wishlisted {
+            color: var(--neon-pink);
+            opacity: 1;
+        }
+
+        /* Smooth transitions */
+        *,
+        *::before,
+        *::after {
+            transition-timing-function: ease-out;
+        }
+
+        /* Loading spinner */
+        .spinner-neon {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--neon-green);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
@@ -104,6 +373,14 @@
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container">
             <a class="navbar-brand text-neon" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
+
+            <!-- Live Search Bar -->
+            <div class="search-container d-none d-lg-block me-3">
+                <input type="text" class="live-search-input" id="liveSearchInput" placeholder="Buscar productos..."
+                    autocomplete="off">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -390,7 +667,133 @@
         </div>
     </footer>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="custom-toast toast-{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'info' %}info{% else %}success{% endif %} mb-2 p-3"
+            data-auto-hide="true">
+            <div class="d-flex align-items-center">
+                <i
+                    class="bi {% if message.tags == 'error' %}bi-x-circle text-danger{% elif message.tags == 'warning' %}bi-exclamation-triangle text-warning{% elif message.tags == 'info' %}bi-info-circle text-info{% else %}bi-check-circle text-success{% endif %} me-2"></i>
+                <span>{{ message }}</span>
+                <button type="button" class="btn-close btn-close-white ms-auto"
+                    onclick="this.parentElement.parentElement.remove()"></button>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Auto-hide toasts after 5 seconds
+        document.querySelectorAll('.custom-toast[data-auto-hide="true"]').forEach(toast => {
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        });
+
+        // Toast notification function (for AJAX calls)
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const icons = {
+                success: 'bi-check-circle text-success',
+                error: 'bi-x-circle text-danger',
+                warning: 'bi-exclamation-triangle text-warning',
+                info: 'bi-info-circle text-info'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `custom-toast toast-${type} mb-2 p-3`;
+            toast.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="bi ${icons[type]} me-2"></i>
+                    <span>${message}</span>
+                    <button type="button" class="btn-close btn-close-white ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // Live Search functionality
+        const searchInput = document.getElementById('liveSearchInput');
+        const searchResults = document.getElementById('searchResults');
+        let searchTimeout;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+
+                if (query.length < 2) {
+                    searchResults.classList.remove('show');
+                    return;
+                }
+
+                searchResults.innerHTML = '<div class="search-loading"><div class="spinner-neon"></div> Buscando...</div>';
+                searchResults.classList.add('show');
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`{% url 'busqueda_ajax' %}?q=${encodeURIComponent(query)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.productos.length === 0) {
+                                searchResults.innerHTML = '<div class="p-3 text-center text-secondary">No se encontraron resultados</div>';
+                            } else {
+                                searchResults.innerHTML = data.productos.map(p => `
+                                    <a href="/producto/${p.id}/" class="search-result-item text-decoration-none">
+                                        <img src="${p.imagen || 'https://via.placeholder.com/50'}" alt="${p.nombre}">
+                                        <div class="info">
+                                            <h6>${p.nombre}</h6>
+                                            <small>$${p.precio}</small>
+                                        </div>
+                                    </a>
+                                `).join('');
+                            }
+                        })
+                        .catch(() => {
+                            searchResults.innerHTML = '<div class="p-3 text-center text-danger">Error al buscar</div>';
+                        });
+                }, 300);
+            });
+
+            // Hide results when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.search-container')) {
+                    searchResults.classList.remove('show');
+                }
+            });
+        }
+
+        // Wishlist quick action (AJAX)
+        document.querySelectorAll('.quick-wishlist-btn').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const productId = this.dataset.productId;
+                const icon = this.querySelector('i');
+
+                fetch(`/deseos/agregar/${productId}/`, { method: 'GET' })
+                    .then(res => {
+                        if (res.redirected && res.url.includes('login')) {
+                            window.location.href = res.url;
+                            return;
+                        }
+                        icon.classList.add('text-danger');
+                        this.classList.add('wishlisted');
+                        showToast('Agregado a lista de deseos', 'success');
+                    })
+                    .catch(() => showToast('Error al agregar', 'error'));
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -14,6 +14,9 @@
     <style>
         :root {
             --neon-green: #00ff88;
+            --neon-pink: #ff0080;
+            --neon-blue: #00ccff;
+            --glass-bg: rgba(30, 30, 30, 0.9);
         }
 
         body {
@@ -34,7 +37,7 @@
         }
 
         .product-container {
-            background: rgba(30, 30, 30, 0.9);
+            background: var(--glass-bg);
             border: 1px solid rgba(0, 255, 136, 0.2);
             border-radius: 15px;
             padding: 30px;
@@ -53,6 +56,7 @@
             border: 2px solid var(--neon-green);
             color: var(--neon-green);
             font-weight: bold;
+            transition: all 0.3s;
         }
 
         .btn-neon:hover {
@@ -65,6 +69,90 @@
             color: var(--neon-green);
         }
 
+        /* Action Buttons */
+        .action-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .action-btn.heart:hover,
+        .action-btn.heart.active {
+            background: var(--neon-pink);
+            border-color: var(--neon-pink);
+            color: #fff;
+        }
+
+        .action-btn.compare:hover {
+            background: var(--neon-blue);
+            border-color: var(--neon-blue);
+            color: #fff;
+        }
+
+        /* Tabs */
+        .nav-tabs {
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-tabs .nav-link {
+            color: #aaa;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 15px 25px;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: transparent;
+            color: var(--neon-green);
+            border-bottom-color: var(--neon-green);
+        }
+
+        .tab-content {
+            padding: 25px 0;
+        }
+
+        /* Reviews */
+        .review-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .star-rating {
+            color: #ffc107;
+        }
+
+        .star-rating .empty {
+            color: #444;
+        }
+
+        /* Review Form */
+        .form-control,
+        .form-select {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+            color: #fff;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: rgba(0, 0, 0, 0.7);
+            border-color: var(--neon-green);
+            color: #fff;
+        }
+
+        /* Related Products */
         .related-card {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid #333;
@@ -74,6 +162,7 @@
 
         .related-card:hover {
             border-color: var(--neon-green);
+            transform: translateY(-5px);
         }
 
         .related-card img {
@@ -81,11 +170,26 @@
             object-fit: contain;
             background: #fff;
         }
+
+        /* Share buttons */
+        .share-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .share-btn:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-dark">
+    <nav class="navbar navbar-dark sticky-top">
         <div class="container">
             <a class="navbar-brand brand-title" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
             <div class="d-flex gap-2">
@@ -120,15 +224,17 @@
 
         <div class="product-container">
             <div class="row">
-                <div class="col-md-5">
+                <div class="col-lg-5 mb-4 mb-lg-0">
                     <img src="{{ producto.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400' }}"
                         alt="{{ producto.nombre }}" class="product-image w-100">
                 </div>
-                <div class="col-md-7">
-                    {% if producto.categoria %}
-                    <span class="badge bg-primary mb-2">{{ producto.categoria.nombre }}</span>
-                    {% endif %}
-                    <span class="badge bg-secondary mb-2">{{ producto.get_tipo_display }}</span>
+                <div class="col-lg-7">
+                    <div class="d-flex gap-2 mb-2">
+                        {% if producto.categoria %}
+                        <span class="badge bg-primary">{{ producto.categoria.nombre }}</span>
+                        {% endif %}
+                        <span class="badge bg-secondary">{{ producto.get_tipo_display }}</span>
+                    </div>
 
                     <h1 class="mb-3">{{ producto.nombre }}</h1>
 
@@ -143,30 +249,53 @@
 
                     <p class="text-secondary mb-4">{{ producto.descripcion }}</p>
 
-                    {# BOTONES SEGÚN ROL #}
+                    <!-- Action Buttons -->
                     {% if user.is_authenticated and not user.is_staff %}
-                    {% if producto.stock > 0 %}
-                    <a href="{% url 'agregar_carrito' producto.id %}" class="btn btn-neon btn-lg">
-                        <i class="bi bi-cart-plus"></i> Agregar al Carrito
-                    </a>
-                    {% else %}
-                    <a href="{% url 'crear_solicitud' producto.id %}" class="btn btn-warning btn-lg">
-                        <i class="bi bi-box-seam"></i> Solicitar a Proveedor
-                    </a>
-                    {% endif %}
+                    <div class="d-flex gap-3 mb-4 flex-wrap">
+                        {% if producto.stock > 0 %}
+                        <a href="{% url 'agregar_carrito' producto.id %}" class="btn btn-neon btn-lg">
+                            <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                        </a>
+                        {% else %}
+                        <a href="{% url 'crear_solicitud' producto.id %}" class="btn btn-warning btn-lg">
+                            <i class="bi bi-box-seam"></i> Solicitar a Proveedor
+                        </a>
+                        {% endif %}
+
+                        <a href="{% url 'agregar_deseos' producto.id %}" class="btn btn-outline-danger action-btn heart"
+                            title="Agregar a deseos">
+                            <i class="bi bi-heart"></i>
+                        </a>
+                        <a href="{% url 'agregar_comparar' producto.id %}"
+                            class="btn btn-outline-info action-btn compare" title="Comparar">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </a>
+                    </div>
                     {% elif not user.is_authenticated %}
-                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">
+                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg mb-4">
                         <i class="bi bi-person"></i> Inicia sesión para comprar
                     </a>
                     {% else %}
-                    {# ADMIN/STAFF #}
-                    <div class="alert alert-info">
+                    <div class="alert alert-info mb-4">
                         <i class="bi bi-info-circle"></i> Vista de administrador. Stock actual: <strong>{{
                             producto.stock }} unidades</strong>
                     </div>
                     {% endif %}
 
-                    <hr class="border-secondary my-4">
+                    <!-- Share Buttons -->
+                    <div class="mb-4">
+                        <span class="text-muted me-2">Compartir:</span>
+                        <a href="#" class="share-btn btn btn-outline-primary btn-sm" onclick="shareOn('facebook')"><i
+                                class="bi bi-facebook"></i></a>
+                        <a href="#" class="share-btn btn btn-outline-info btn-sm" onclick="shareOn('twitter')"><i
+                                class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="share-btn btn btn-outline-success btn-sm" onclick="shareOn('whatsapp')"><i
+                                class="bi bi-whatsapp"></i></a>
+                        <button class="share-btn btn btn-outline-secondary btn-sm" onclick="copyLink()"><i
+                                class="bi bi-link-45deg"></i></button>
+                    </div>
+
+                    <hr class="border-secondary">
 
                     <div class="row text-center">
                         <div class="col-4">
@@ -186,12 +315,122 @@
             </div>
         </div>
 
+        <!-- Tabs: Descripción / Especificaciones / Reseñas -->
+        <ul class="nav nav-tabs mt-5" id="productTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#descripcion">
+                    <i class="bi bi-file-text"></i> Descripción
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#resenas">
+                    <i class="bi bi-star"></i> Reseñas ({{ resenas.count|default:0 }})
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Descripción -->
+            <div class="tab-pane fade show active" id="descripcion">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h5 class="text-neon mb-3">Detalles del Producto</h5>
+                        <p class="text-secondary">{{ producto.descripcion }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="product-container p-3">
+                            <h6 class="mb-3">Especificaciones</h6>
+                            <table class="table table-sm table-borderless text-white">
+                                <tr>
+                                    <td class="text-muted">Categoría:</td>
+                                    <td>{{ producto.categoria.nombre|default:"N/A" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Tipo:</td>
+                                    <td>{{ producto.get_tipo_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Stock:</td>
+                                    <td>{{ producto.stock }} unidades</td>
+                                </tr>
+                                {% if producto.proveedor %}
+                                <tr>
+                                    <td class="text-muted">Proveedor:</td>
+                                    <td>{{ producto.proveedor.nombre }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reseñas -->
+            <div class="tab-pane fade" id="resenas">
+                {% if resenas %}
+                {% for resena in resenas %}
+                <div class="review-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>{{ resena.usuario.username }}</strong>
+                            <div class="star-rating">
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= resena.calificacion %} <i class="bi bi-star-fill"></i>
+                                    {% else %}
+                                    <i class="bi bi-star empty"></i>
+                                    {% endif %}
+                                    {% endfor %}
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ resena.fecha|date:"d/m/Y" }}</small>
+                    </div>
+                    <p class="mt-2 mb-0 text-secondary">{{ resena.comentario }}</p>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-chat-square-text text-secondary fs-1"></i>
+                    <p class="text-secondary mt-3">Aún no hay reseñas para este producto</p>
+                </div>
+                {% endif %}
+
+                <!-- Formulario de reseña -->
+                {% if user.is_authenticated and not user.is_staff %}
+                <div class="product-container mt-4">
+                    <h5 class="mb-3"><i class="bi bi-pencil"></i> Escribir una reseña</h5>
+                    <form method="post" action="{% url 'agregar_resena' producto.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Calificación</label>
+                            <select name="calificacion" class="form-select" style="max-width: 150px;">
+                                <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                                <option value="4">⭐⭐⭐⭐ (4)</option>
+                                <option value="3">⭐⭐⭐ (3)</option>
+                                <option value="2">⭐⭐ (2)</option>
+                                <option value="1">⭐ (1)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tu reseña</label>
+                            <textarea name="comentario" class="form-control" rows="3"
+                                placeholder="Cuéntanos tu experiencia con este producto..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-neon">
+                            <i class="bi bi-send"></i> Enviar Reseña
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Productos Relacionados -->
         {% if relacionados %}
         <h4 class="mt-5 mb-4"><i class="bi bi-lightning text-neon"></i> Productos Relacionados</h4>
         <div class="row g-3">
             {% for p in relacionados %}
-            <div class="col-md-3">
-                <div class="related-card p-3 text-center">
+            <div class="col-6 col-md-3">
+                <div class="related-card p-3 text-center h-100">
                     <img src="{{ p.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=150' }}"
                         alt="{{ p.nombre }}" class="w-100 rounded">
                     <h6 class="mt-2 mb-1">{{ p.nombre|truncatewords:5 }}</h6>
@@ -205,6 +444,33 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function shareOn(platform) {
+            const url = encodeURIComponent(window.location.href);
+            const title = encodeURIComponent("{{ producto.nombre }} - BitForge");
+            let shareUrl = '';
+
+            switch (platform) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+                    break;
+                case 'whatsapp':
+                    shareUrl = `https://wa.me/?text=${title}%20${url}`;
+                    break;
+            }
+
+            if (shareUrl) window.open(shareUrl, '_blank', 'width=600,height=400');
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('¡Enlace copiado!');
+            });
+        }
+    </script>
 </body>
 
 </html>

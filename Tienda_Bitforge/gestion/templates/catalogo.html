@@ -14,6 +14,9 @@
     <style>
         :root {
             --neon-green: #00ff88;
+            --neon-blue: #00ccff;
+            --neon-pink: #ff0080;
+            --glass-bg: rgba(30, 30, 30, 0.85);
         }
 
         body {
@@ -34,23 +37,27 @@
         }
 
         .filter-sidebar {
-            background: rgba(30, 30, 30, 0.9);
+            background: var(--glass-bg);
             border: 1px solid rgba(0, 255, 136, 0.2);
             border-radius: 15px;
             padding: 20px;
+            position: sticky;
+            top: 80px;
         }
 
         .glass-card {
-            background: rgba(30, 30, 30, 0.85);
+            background: var(--glass-bg);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             overflow: hidden;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
         .glass-card:hover {
-            transform: scale(1.03);
+            transform: translateY(-5px);
             border-color: var(--neon-green);
+            box-shadow: 0 15px 40px rgba(0, 255, 136, 0.2);
         }
 
         .glass-card img {
@@ -59,16 +66,68 @@
             background: #fff;
         }
 
+        /* Quick Actions */
+        .quick-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .glass-card:hover .quick-actions {
+            opacity: 1;
+        }
+
+        .quick-action-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.8);
+            border: none;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .quick-action-btn.heart:hover {
+            background: var(--neon-pink);
+        }
+
+        .quick-action-btn.compare:hover {
+            background: var(--neon-blue);
+        }
+
+        .quick-action-btn.eye:hover {
+            background: var(--neon-green);
+        }
+
+        .quick-action-btn.heart.active {
+            background: var(--neon-pink);
+        }
+
         .btn-neon {
             background: transparent;
             border: 2px solid var(--neon-green);
             color: var(--neon-green);
             font-weight: bold;
+            transition: 0.3s;
         }
 
         .btn-neon:hover {
             background: var(--neon-green);
             color: #000;
+            box-shadow: 0 0 15px var(--neon-green);
         }
 
         .text-neon {
@@ -87,25 +146,104 @@
             background: rgba(0, 0, 0, 0.7);
             border-color: var(--neon-green);
             color: #fff;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .form-select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        /* View Toggle */
+        .view-toggle .btn {
+            padding: 8px 12px;
+        }
+
+        .view-toggle .btn.active {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            color: #000;
+        }
+
+        /* Sort dropdown */
+        .sort-select {
+            max-width: 200px;
+        }
+
+        /* Price Range */
+        .price-range-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .price-range-inputs input {
+            width: 80px;
+        }
+
+        /* Compare badge */
+        .compare-count {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .compare-count .btn {
+            padding: 15px 25px;
+            font-size: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        /* Category pills */
+        .category-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .category-pill {
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .category-pill:hover,
+        .category-pill.active {
+            background: var(--neon-green);
+            border-color: var(--neon-green);
+            color: #000;
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-dark">
+    <nav class="navbar navbar-dark sticky-top">
         <div class="container">
             <a class="navbar-brand brand-title" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
-            <div class="d-flex gap-2">
-                <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-house"></i> Inicio</a>
-                {% if user.is_authenticated %}
-                <a href="{% url 'ver_carrito' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-cart"></i>
-                    Carrito</a>
+            <div class="d-flex gap-2 align-items-center">
+                {% if user.is_authenticated and not user.is_staff %}
+                <a href="{% url 'lista_deseos' %}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-heart-fill"></i>
+                </a>
+                <a href="{% url 'comparar_productos' %}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-arrow-left-right"></i>
+                </a>
+                <a href="{% url 'ver_carrito' %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-cart"></i> Carrito
+                </a>
                 {% endif %}
+                <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-house"></i></a>
             </div>
         </div>
     </nav>
 
-    <div class="container py-5">
+    <div class="container py-4">
         <div class="row">
             <!-- Sidebar Filtros -->
             <div class="col-lg-3 mb-4">
@@ -113,30 +251,68 @@
                     <h5 class="mb-3"><i class="bi bi-funnel text-neon"></i> Filtros</h5>
 
                     <form method="get" action="">
+                        <!-- Búsqueda -->
                         <div class="mb-3">
                             <label class="form-label small text-muted">Buscar</label>
                             <input type="text" name="q" class="form-control" placeholder="Nombre del producto..."
                                 value="{{ busqueda|default:'' }}">
                         </div>
 
+                        <!-- Categoría -->
                         <div class="mb-3">
                             <label class="form-label small text-muted">Categoría</label>
                             <select name="categoria" class="form-select">
-                                <option value="">Todas</option>
+                                <option value="">Todas las categorías</option>
                                 {% for cat in categorias %}
                                 <option value="{{ cat.id }}" {% if categoria_actual==cat.id|stringformat:"s"
-                                    %}selected{% endif %}>{{ cat.nombre }}</option>
+                                    %}selected{% endif %}>
+                                    {{ cat.nombre }}
+                                </option>
                                 {% endfor %}
                             </select>
                         </div>
 
+                        <!-- Precio -->
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Rango de Precio</label>
+                            <div class="price-range-inputs">
+                                <input type="number" name="precio_min" class="form-control" placeholder="Min"
+                                    value="{{ request.GET.precio_min }}">
+                                <span class="text-muted align-self-center">-</span>
+                                <input type="number" name="precio_max" class="form-control" placeholder="Max"
+                                    value="{{ request.GET.precio_max }}">
+                            </div>
+                        </div>
+
+                        <!-- Ordenar -->
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Ordenar por</label>
+                            <select name="orden" class="form-select">
+                                <option value="" {% if not request.GET.orden %}selected{% endif %}>Más recientes
+                                </option>
+                                <option value="precio_asc" {% if request.GET.orden=='precio_asc' %}selected{% endif %}>
+                                    Precio: Menor a Mayor</option>
+                                <option value="precio_desc" {% if request.GET.orden=='precio_desc' %}selected{% endif
+                                    %}>Precio: Mayor a Menor</option>
+                                <option value="nombre" {% if request.GET.orden=='nombre' %}selected{% endif %}>Nombre
+                                    A-Z</option>
+                            </select>
+                        </div>
+
+                        <!-- Solo con stock -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="solo_stock" class="form-check-input" id="soloStock" {% if
+                                request.GET.solo_stock %}checked{% endif %}>
+                            <label class="form-check-label small" for="soloStock">Solo productos en stock</label>
+                        </div>
+
                         <button type="submit" class="btn btn-neon w-100">
-                            <i class="bi bi-search"></i> Filtrar
+                            <i class="bi bi-search"></i> Aplicar Filtros
                         </button>
 
-                        {% if busqueda or categoria_actual %}
+                        {% if busqueda or categoria_actual or request.GET.precio_min or request.GET.precio_max %}
                         <a href="{% url 'catalogo' %}" class="btn btn-outline-secondary w-100 mt-2">
-                            <i class="bi bi-x-circle"></i> Limpiar
+                            <i class="bi bi-x-circle"></i> Limpiar Filtros
                         </a>
                         {% endif %}
                     </form>
@@ -145,15 +321,54 @@
 
             <!-- Productos -->
             <div class="col-lg-9">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2><i class="bi bi-grid text-neon"></i> Catálogo</h2>
-                    <span class="badge bg-secondary fs-6">{{ productos.count }} productos</span>
+                <!-- Header con contador y ordenamiento -->
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div>
+                        <h2 class="mb-0"><i class="bi bi-grid text-neon"></i> Catálogo</h2>
+                        <small class="text-muted">{{ productos.count }} productos encontrados</small>
+                    </div>
                 </div>
 
+                <!-- Category Pills (quick filter) -->
+                <div class="category-pills">
+                    <a href="{% url 'catalogo' %}" class="category-pill {% if not categoria_actual %}active{% endif %}">
+                        Todos
+                    </a>
+                    {% for cat in categorias %}
+                    <a href="?categoria={{ cat.id }}"
+                        class="category-pill {% if categoria_actual == cat.id|stringformat:'s' %}active{% endif %}">
+                        {{ cat.nombre }}
+                    </a>
+                    {% endfor %}
+                </div>
+
+                <!-- Grid de productos -->
                 <div class="row g-4">
                     {% for p in productos %}
-                    <div class="col-md-4">
+                    <div class="col-md-6 col-lg-4">
                         <div class="glass-card h-100">
+                            <!-- Quick Actions -->
+                            {% if user.is_authenticated and not user.is_staff %}
+                            <div class="quick-actions">
+                                <button type="button" class="quick-action-btn eye quick-view-btn" title="Vista rápida"
+                                    data-id="{{ p.id }}" data-name="{{ p.nombre }}"
+                                    data-desc="{{ p.descripcion|truncatewords:15 }}" data-price="{{ p.precio }}"
+                                    data-stock="{{ p.stock }}"
+                                    data-category="{{ p.categoria.nombre|default:'General' }}"
+                                    data-image="{{ p.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=300' }}">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <a href="{% url 'agregar_deseos' p.id %}" class="quick-action-btn heart"
+                                    title="Agregar a deseos">
+                                    <i class="bi bi-heart"></i>
+                                </a>
+                                <a href="{% url 'agregar_comparar' p.id %}" class="quick-action-btn compare"
+                                    title="Comparar">
+                                    <i class="bi bi-arrow-left-right"></i>
+                                </a>
+                            </div>
+                            {% endif %}
+
                             <a href="{% url 'detalle_producto' p.id %}">
                                 <img src="{{ p.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=300' }}"
                                     class="w-100" alt="{{ p.nombre }}">
@@ -173,19 +388,23 @@
                                     {% endif %}
                                 </div>
 
-                                {% if user.is_authenticated %}
+                                {% if user.is_authenticated and not user.is_staff %}
                                 {% if p.stock > 0 %}
                                 <a href="{% url 'agregar_carrito' p.id %}" class="btn btn-neon btn-sm w-100">
-                                    <i class="bi bi-cart-plus"></i> Agregar
+                                    <i class="bi bi-cart-plus"></i> Agregar al Carrito
                                 </a>
                                 {% else %}
                                 <a href="{% url 'crear_solicitud' p.id %}" class="btn btn-outline-warning btn-sm w-100">
                                     <i class="bi bi-box-seam"></i> Solicitar
                                 </a>
                                 {% endif %}
-                                {% else %}
+                                {% elif not user.is_authenticated %}
                                 <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm w-100">
                                     <i class="bi bi-person"></i> Inicia sesión
+                                </a>
+                                {% else %}
+                                <a href="{% url 'detalle_producto' p.id %}" class="btn btn-outline-info btn-sm w-100">
+                                    <i class="bi bi-eye"></i> Ver Detalle
                                 </a>
                                 {% endif %}
                             </div>
@@ -195,7 +414,8 @@
                     <div class="col-12 text-center py-5">
                         <i class="bi bi-search text-secondary" style="font-size: 4rem;"></i>
                         <h4 class="text-secondary mt-3">No se encontraron productos</h4>
-                        <a href="{% url 'catalogo' %}" class="btn btn-outline-light mt-3">Ver todos</a>
+                        <p class="text-muted">Intenta modificar los filtros de búsqueda</p>
+                        <a href="{% url 'catalogo' %}" class="btn btn-neon mt-3">Ver todos los productos</a>
                     </div>
                     {% endfor %}
                 </div>
@@ -203,7 +423,73 @@
         </div>
     </div>
 
+    <!-- Quick View Modal -->
+    <div class="modal fade" id="quickViewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="background: rgba(30, 30, 30, 0.98); border: 1px solid var(--neon-green);">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-neon" id="quickViewTitle"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <img id="quickViewImage" src="" alt="" class="w-100 rounded"
+                                style="background:#fff; max-height:300px; object-fit:contain;">
+                        </div>
+                        <div class="col-md-7">
+                            <span id="quickViewCategory" class="badge bg-primary mb-2"></span>
+                            <h4 id="quickViewName" class="mb-2"></h4>
+                            <p id="quickViewDesc" class="text-secondary small"></p>
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <span id="quickViewPrice" class="fs-3 text-neon fw-bold"></span>
+                                <span id="quickViewStock" class="badge"></span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a id="quickViewCartBtn" href="#" class="btn btn-neon">
+                                    <i class="bi bi-cart-plus"></i> Agregar
+                                </a>
+                                <a id="quickViewDetailBtn" href="#" class="btn btn-outline-light">
+                                    <i class="bi bi-eye"></i> Ver Detalle
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Quick View functionality - bind to all quick view buttons
+        document.querySelectorAll('.quick-view-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const data = this.dataset;
+
+                document.getElementById('quickViewTitle').textContent = data.name;
+                document.getElementById('quickViewName').textContent = data.name;
+                document.getElementById('quickViewDesc').textContent = data.desc;
+                document.getElementById('quickViewPrice').textContent = '$' + data.price;
+                document.getElementById('quickViewCategory').textContent = data.category;
+                document.getElementById('quickViewImage').src = data.image;
+
+                const stockBadge = document.getElementById('quickViewStock');
+                if (parseInt(data.stock) > 0) {
+                    stockBadge.className = 'badge bg-success';
+                    stockBadge.textContent = data.stock + ' disponibles';
+                } else {
+                    stockBadge.className = 'badge bg-danger';
+                    stockBadge.textContent = 'Agotado';
+                }
+
+                document.getElementById('quickViewCartBtn').href = '/carrito/agregar/' + data.id + '/';
+                document.getElementById('quickViewDetailBtn').href = '/producto/' + data.id + '/';
+
+                new bootstrap.Modal(document.getElementById('quickViewModal')).show();
+            });
+        });
+    </script>
 </body>
 
 </html>

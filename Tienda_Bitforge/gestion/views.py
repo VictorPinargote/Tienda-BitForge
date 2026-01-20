@@ -75,9 +75,43 @@ def registro(request):
 # Vista del carrito
 @login_required
 def ver_carrito(request):
-    items = CarritoItem.objects.filter(usuario=request.user)
-    total = sum(item.subtotal() for item in items)
-    return render(request, 'carrito.html', {'items': items, 'total': total})
+    items = CarritoItem.objects.filter(usuario=request.user).select_related('producto')
+    subtotal = sum(item.subtotal() for item in items)
+    total_items = sum(item.cantidad for item in items)
+    
+    # Verificar cupón en sesión
+    descuento = Decimal('0')
+    cupon = None
+    cupon_codigo = request.session.get('cupon_codigo')
+    
+    if cupon_codigo:
+        try:
+            cupon = Cupon.objects.get(codigo=cupon_codigo)
+            if cupon.esta_vigente() and subtotal >= cupon.compra_minima:
+                descuento = subtotal * Decimal(cupon.descuento_porcentaje) / 100
+                if cupon.descuento_maximo and descuento > cupon.descuento_maximo:
+                    descuento = cupon.descuento_maximo
+        except Cupon.DoesNotExist:
+            del request.session['cupon_codigo']
+    
+    total_final = subtotal - descuento
+    
+    # Productos sugeridos (excluir los que ya están en carrito)
+    productos_en_carrito = [item.producto_id for item in items]
+    sugerencias = Producto.objects.filter(
+        disponible=True, 
+        stock__gt=0
+    ).exclude(id__in=productos_en_carrito)[:4]
+    
+    return render(request, 'carrito.html', {
+        'items': items,
+        'total': subtotal,
+        'total_items': total_items,
+        'cupon': cupon,
+        'descuento': descuento,
+        'total_final': total_final,
+        'sugerencias': sugerencias
+    })
 
 # Vista de agregar al carrito (CON VALIDACIÓN DE STOCK)
 @login_required
@@ -238,7 +272,7 @@ def catalogo(request):
     productos = Producto.objects.filter(disponible=True)
     categorias = Categoria.objects.all()
     
-    # Filtros
+    # Filtros básicos
     categoria_id = request.GET.get('categoria')
     busqueda = request.GET.get('q')
     
@@ -246,6 +280,36 @@ def catalogo(request):
         productos = productos.filter(categoria_id=categoria_id)
     if busqueda:
         productos = productos.filter(nombre__icontains=busqueda)
+    
+    # Filtros de precio
+    precio_min = request.GET.get('precio_min')
+    precio_max = request.GET.get('precio_max')
+    
+    if precio_min:
+        try:
+            productos = productos.filter(precio__gte=Decimal(precio_min))
+        except:
+            pass
+    if precio_max:
+        try:
+            productos = productos.filter(precio__lte=Decimal(precio_max))
+        except:
+            pass
+    
+    # Solo con stock
+    if request.GET.get('solo_stock'):
+        productos = productos.filter(stock__gt=0)
+    
+    # Ordenamiento
+    orden = request.GET.get('orden')
+    if orden == 'precio_asc':
+        productos = productos.order_by('precio')
+    elif orden == 'precio_desc':
+        productos = productos.order_by('-precio')
+    elif orden == 'nombre':
+        productos = productos.order_by('nombre')
+    else:
+        productos = productos.order_by('-fecha_creacion')
     
     return render(request, 'catalogo.html', {
         'productos': productos,
@@ -893,3 +957,156 @@ def panel_admin_mejorado(request):
         'productos_vendidos': productos_vendidos,
         'suscriptores': suscriptores
     })
+
+
+# ============== NUEVAS VISTAS UI ENHANCEMENT ==============
+
+# Vista AJAX para búsqueda en vivo
+def busqueda_ajax(request):
+    query = request.GET.get('q', '')
+    productos = []
+    
+    if query and len(query) >= 2:
+        resultado = Producto.objects.filter(
+            Q(nombre__icontains=query) | Q(descripcion__icontains=query),
+            disponible=True
+        )[:10]
+        
+        productos = [{
+            'id': p.id,
+            'nombre': p.nombre,
+            'precio': str(p.precio),
+            'imagen': p.imagen_url or ''
+        } for p in resultado]
+    
+    return JsonResponse({'productos': productos})
+
+
+# Vista de detalle de producto mejorada
+def detalle_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    
+    # Productos relacionados (misma categoría)
+    relacionados = Producto.objects.filter(
+        categoria=producto.categoria,
+        disponible=True
+    ).exclude(id=producto.id)[:4]
+    
+    # Reseñas del producto
+    resenas = Resena.objects.filter(producto=producto).order_by('-fecha')
+    
+    return render(request, 'detalle_producto.html', {
+        'producto': producto,
+        'relacionados': relacionados,
+        'resenas': resenas
+    })
+
+
+# Página de ofertas (productos con bajo stock)
+def ofertas(request):
+    productos = Producto.objects.filter(
+        disponible=True,
+        stock__gt=0,
+        stock__lte=5
+    ).order_by('stock')[:12]
+    
+    return render(request, 'ofertas.html', {'productos': productos})
+
+
+# Página de preguntas frecuentes
+def faq(request):
+    return render(request, 'faq.html')
+
+
+# Página de contacto
+def contacto(request):
+    if request.method == 'POST':
+        # Simulamos el envío del formulario
+        messages.success(request, '✅ ¡Mensaje enviado! Te responderemos pronto.')
+        return redirect('contacto')
+    return render(request, 'contacto.html')
+
+
+# Página sobre nosotros
+def sobre_nosotros(request):
+    return render(request, 'sobre_nosotros.html')
+
+
+# Vista de gestión de clientes (Admin)
+@staff_member_required
+def admin_clientes(request):
+    from django.contrib.auth.models import User
+    from django.db.models import Sum, Count
+    from datetime import timedelta
+    
+    # Obtener todos los usuarios que no son staff
+    clientes = User.objects.filter(is_staff=False).annotate(
+        total_pedidos=Count('pedido'),
+        total_gastado=Sum('pedido__total')
+    ).order_by('-date_joined')
+    
+    # Estadísticas
+    total_clientes = clientes.count()
+    clientes_activos = User.objects.filter(is_staff=False, pedido__isnull=False).distinct().count()
+    
+    hace_30_dias = timezone.now() - timedelta(days=30)
+    nuevos_mes = User.objects.filter(is_staff=False, date_joined__gte=hace_30_dias).count()
+    
+    suscriptores = SuscripcionNewsletter.objects.filter(activo=True).count()
+    
+    return render(request, 'admin/gestionar_clientes.html', {
+        'clientes': clientes,
+        'total_clientes': total_clientes,
+        'clientes_activos': clientes_activos,
+        'nuevos_mes': nuevos_mes,
+        'suscriptores': suscriptores
+    })
+
+
+# Vista de exportación de reportes (Admin)
+@staff_member_required
+def admin_exportar_reporte(request):
+    import csv
+    from django.http import HttpResponse
+    
+    tipo = request.GET.get('tipo', 'pedidos')
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="reporte_{tipo}_{timezone.now().strftime("%Y%m%d")}.csv"'
+    
+    writer = csv.writer(response)
+    
+    if tipo == 'pedidos':
+        writer.writerow(['Número', 'Cliente', 'Total', 'Estado', 'Fecha'])
+        for pedido in Pedido.objects.all().order_by('-fecha_pedido'):
+            writer.writerow([
+                pedido.numero_pedido,
+                pedido.usuario.username,
+                pedido.total,
+                pedido.get_estado_display(),
+                pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M')
+            ])
+    elif tipo == 'productos':
+        writer.writerow(['Nombre', 'Precio', 'Stock', 'Categoría', 'Disponible'])
+        for producto in Producto.objects.all():
+            writer.writerow([
+                producto.nombre,
+                producto.precio,
+                producto.stock,
+                producto.categoria.nombre if producto.categoria else 'N/A',
+                'Sí' if producto.disponible else 'No'
+            ])
+    elif tipo == 'clientes':
+        from django.contrib.auth.models import User
+        writer.writerow(['Username', 'Email', 'Fecha Registro', 'Total Pedidos'])
+        for user in User.objects.filter(is_staff=False):
+            writer.writerow([
+                user.username,
+                user.email,
+                user.date_joined.strftime('%d/%m/%Y'),
+                Pedido.objects.filter(usuario=user).count()
+            ])
+    
+    return response
+
+

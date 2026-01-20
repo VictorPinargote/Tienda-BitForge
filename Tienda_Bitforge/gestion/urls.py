@@ -82,4 +82,8 @@ urlpatterns = [
     # Utilidades Admin (existente)
     path('admin/cargar-productos/', views.cargar_productos_demo, name='cargar_productos'),
     path('admin/limpiar-productos/', views.limpiar_productos, name='limpiar_productos'),
+    
+    # Nuevas funcionalidades Admin
+    path('admin/clientes/', views.admin_clientes, name='admin_clientes'),
+    path('admin/exportar/', views.admin_exportar_reporte, name='admin_exportar'),
 ]

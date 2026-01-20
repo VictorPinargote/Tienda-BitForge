@@ -15,6 +15,8 @@
         :root {
             --neon-green: #00ff88;
             --neon-blue: #00ccff;
+            --neon-orange: #ff9900;
+            --glass-bg: rgba(30, 30, 30, 0.9);
         }
 
         body {
@@ -36,7 +38,7 @@
         }
 
         .cart-container {
-            background: rgba(30, 30, 30, 0.9);
+            background: var(--glass-bg);
             border: 1px solid rgba(0, 255, 136, 0.2);
             border-radius: 15px;
             padding: 30px;
@@ -60,6 +62,7 @@
             height: 80px;
             object-fit: cover;
             border-radius: 8px;
+            background: #fff;
         }
 
         .btn-neon {
@@ -110,19 +113,69 @@
             color: var(--neon-green);
             text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
+
+        /* Coupon Section */
+        .coupon-section {
+            background: rgba(255, 153, 0, 0.1);
+            border: 1px dashed rgba(255, 153, 0, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .coupon-input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .coupon-input:focus {
+            border-color: var(--neon-orange);
+            box-shadow: 0 0 10px rgba(255, 153, 0, 0.3);
+        }
+
+        .coupon-applied {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--neon-green);
+        }
+
+        /* Suggestions */
+        .suggestion-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .suggestion-card:hover {
+            border-color: var(--neon-green);
+        }
+
+        .suggestion-card img {
+            width: 100%;
+            height: 100px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 8px;
+        }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
             <a class="navbar-brand brand-title" href="{% url 'home' %}">
                 <i class="bi bi-cpu"></i> BITFORGE
             </a>
             <div class="d-flex align-items-center gap-3">
-                <span class="text-light">Hola, {{ user.username }}</span>
+                <a href="{% url 'catalogo' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-grid"></i> Catálogo
+                </a>
                 <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-arrow-left"></i> Volver
+                    <i class="bi bi-house"></i> Inicio
                 </a>
             </div>
         </div>
@@ -144,7 +197,7 @@
         {% endif %}
 
         <div class="row">
-            <div class="col-lg-8">
+            <div class="col-lg-8 mb-4">
                 <div class="cart-container">
                     {% if items %}
                     {% for item in items %}
@@ -163,7 +216,7 @@
                             <div class="col-auto text-center">
                                 <form action="{% url 'actualizar_cantidad' item.id %}" method="post" class="d-inline">
                                     {% csrf_token %}
-                                    <input type="number" name="cantidad" value="{{ item.cantidad }}" min="0"
+                                    <input type="number" name="cantidad" value="{{ item.cantidad }}" min="1"
                                         max="{{ item.producto.stock }}" class="quantity-input"
                                         onchange="this.form.submit()">
                                 </form>
@@ -185,12 +238,40 @@
                         <i class="bi bi-cart-x text-secondary" style="font-size: 4rem;"></i>
                         <h4 class="text-secondary mt-3">Tu carrito está vacío</h4>
                         <p class="text-muted">Explora nuestro catálogo y agrega productos</p>
-                        <a href="{% url 'home' %}" class="btn btn-neon mt-3">
+                        <a href="{% url 'catalogo' %}" class="btn btn-neon mt-3">
                             <i class="bi bi-shop"></i> Ver Catálogo
                         </a>
                     </div>
                     {% endif %}
                 </div>
+
+                {% if items %}
+                <!-- Cupón Section -->
+                <div class="coupon-section {% if cupon %}coupon-applied{% endif %}">
+                    {% if cupon %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="bi bi-check-circle text-success"></i>
+                            <strong class="text-success">Cupón aplicado:</strong>
+                            <span class="badge bg-warning text-dark">{{ cupon.codigo }}</span>
+                            <span class="text-muted">(-{{ cupon.descuento_porcentaje }}%)</span>
+                        </div>
+                        <a href="{% url 'quitar_cupon' %}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-x"></i> Quitar
+                        </a>
+                    </div>
+                    {% else %}
+                    <form action="{% url 'aplicar_cupon' %}" method="post" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <input type="text" name="codigo" class="form-control coupon-input" placeholder="Código de cupón"
+                            required>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-tag"></i> Aplicar
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
 
             <div class="col-lg-4">
@@ -199,9 +280,17 @@
                     <h4 class="mb-4"><i class="bi bi-receipt"></i> Resumen</h4>
 
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-secondary">Productos ({{ items|length }})</span>
+                        <span class="text-secondary">Productos ({{ total_items }})</span>
                         <span>${{ total }}</span>
                     </div>
+
+                    {% if descuento > 0 %}
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span><i class="bi bi-tag"></i> Descuento</span>
+                        <span>-${{ descuento }}</span>
+                    </div>
+                    {% endif %}
+
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-secondary">Envío</span>
                         <span class="text-success">Gratis</span>
@@ -211,20 +300,52 @@
 
                     <div class="d-flex justify-content-between mb-4">
                         <span class="fs-5 fw-bold">Total</span>
-                        <span class="fs-4 text-neon fw-bold">${{ total }}</span>
+                        <span class="fs-4 text-neon fw-bold">${{ total_final }}</span>
                     </div>
 
-                    <a href="{% url 'finalizar_compra' %}" class="btn btn-checkout w-100 py-3 fs-5">
+                    <a href="{% url 'checkout' %}" class="btn btn-checkout w-100 py-3 fs-5">
                         <i class="bi bi-credit-card"></i> Finalizar Compra
                     </a>
 
-                    <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 mt-2">
+                    <a href="{% url 'catalogo' %}" class="btn btn-outline-secondary w-100 mt-2">
                         <i class="bi bi-arrow-left"></i> Seguir Comprando
                     </a>
+
+                    <!-- Security badges -->
+                    <div class="mt-4 text-center">
+                        <small class="text-muted d-block mb-2">Pago 100% Seguro</small>
+                        <div class="d-flex justify-content-center gap-2">
+                            <i class="bi bi-shield-check text-success fs-4"></i>
+                            <i class="bi bi-lock text-success fs-4"></i>
+                            <i class="bi bi-credit-card-2-front text-success fs-4"></i>
+                        </div>
+                    </div>
                 </div>
                 {% endif %}
             </div>
         </div>
+
+        {% if items and sugerencias %}
+        <!-- Productos sugeridos -->
+        <div class="mt-5">
+            <h5 class="mb-4"><i class="bi bi-lightning text-neon"></i> También te puede interesar</h5>
+            <div class="row g-3">
+                {% for p in sugerencias %}
+                <div class="col-6 col-md-3">
+                    <div class="suggestion-card">
+                        <img src="{{ p.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=100' }}"
+                            alt="{{ p.nombre }}">
+                        <h6 class="mt-2 mb-1 text-truncate">{{ p.nombre }}</h6>
+                        <span class="text-neon fw-bold">${{ p.precio }}</span>
+                        <a href="{% url 'agregar_carrito' p.id %}" class="btn btn-outline-success btn-sm w-100 mt-2">
+                            <i class="bi bi-cart-plus"></i> Agregar
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

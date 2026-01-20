@@ -11,10 +11,14 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
         rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --neon-green: #00ff88;
             --neon-blue: #00ccff;
+            --neon-orange: #ff9900;
+            --neon-pink: #ff0080;
         }
 
         body {
@@ -46,24 +50,35 @@
             background: rgba(30, 30, 30, 0.9);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 15px;
-            padding: 25px;
-            text-align: center;
+            padding: 20px;
             transition: 0.3s;
         }
 
         .stat-card:hover {
             border-color: var(--neon-green);
-            transform: translateY(-5px);
+            transform: translateY(-3px);
         }
 
-        .stat-card i {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
+        .stat-card .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
         }
 
-        .stat-card h2 {
-            font-size: 2.5rem;
-            margin-bottom: 5px;
+        .stat-card h3 {
+            font-size: 1.8rem;
+            margin: 0;
+        }
+
+        .chart-container {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
         }
 
         .quick-action {
@@ -81,6 +96,7 @@
         .quick-action:hover {
             border-color: var(--neon-blue);
             color: var(--neon-blue);
+            transform: translateY(-2px);
         }
 
         .quick-action i {
@@ -89,137 +105,328 @@
             margin-bottom: 10px;
         }
 
-        .text-neon {
-            color: var(--neon-green);
+        .recent-orders-table {
+            background: rgba(30, 30, 30, 0.9);
+            border-radius: 15px;
         }
 
-        .utility-section {
-            background: rgba(0, 0, 0, 0.4);
+        .recent-orders-table th {
+            border-color: #333;
+            color: #aaa;
+            font-weight: normal;
+        }
+
+        .recent-orders-table td {
+            border-color: #333;
+            vertical-align: middle;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .top-products-item {
+            background: rgba(0, 0, 0, 0.3);
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-dark">
-        <div class="container">
+    <nav class="navbar navbar-dark sticky-top">
+        <div class="container-fluid px-4">
             <a class="navbar-brand brand-title" href="{% url 'home' %}">
                 <i class="bi bi-cpu"></i> BITFORGE
                 <span class="admin-badge">ADMIN</span>
             </a>
             <div class="d-flex gap-2">
-                <a href="/admin/" class="btn btn-outline-info btn-sm"><i class="bi bi-gear"></i> Django Admin</a>
-                <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-house"></i> Tienda</a>
+                <a href="{% url 'admin_pedidos' %}" class="btn btn-outline-warning btn-sm"><i class="bi bi-bag"></i>
+                    Pedidos</a>
+                <a href="{% url 'admin_cupones' %}" class="btn btn-outline-success btn-sm"><i class="bi bi-tag"></i>
+                    Cupones</a>
+                <a href="/admin/" class="btn btn-outline-info btn-sm"><i class="bi bi-gear"></i> Django</a>
+                <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-house"></i></a>
             </div>
         </div>
     </nav>
 
-    <div class="container py-5">
-        <h2 class="mb-4"><i class="bi bi-speedometer2" style="color: var(--neon-blue);"></i> Panel de Control</h2>
-
+    <div class="container-fluid px-4 py-4">
         {% if messages %}
         {% for message in messages %}
-        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
-            role="alert">
+        <div
+            class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
             {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
         {% endif %}
 
-        <!-- Stats -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <i class="bi bi-box-seam text-primary"></i>
-                    <h2>{{ total_productos }}</h2>
-                    <p class="text-muted mb-0">Productos</p>
+        <!-- Stats Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="icon bg-primary bg-opacity-25 text-primary">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Ventas Totales</small>
+                        <h3 class="text-success">${{ ventas_totales|floatformat:0 }}</h3>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <i class="bi bi-exclamation-triangle text-danger"></i>
-                    <h2>{{ productos_agotados }}</h2>
-                    <p class="text-muted mb-0">Agotados</p>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="icon bg-warning bg-opacity-25 text-warning">
+                        <i class="bi bi-bag"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Pedidos Totales</small>
+                        <h3>{{ total_pedidos }}</h3>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <i class="bi bi-hourglass-split text-warning"></i>
-                    <h2>{{ solicitudes_pendientes }}</h2>
-                    <p class="text-muted mb-0">Solicitudes Pendientes</p>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="icon bg-info bg-opacity-25 text-info">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Productos</small>
+                        <h3>{{ total_productos }}</h3>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <i class="bi bi-cart-check text-success"></i>
-                    <h2>{{ total_ventas }}</h2>
-                    <p class="text-muted mb-0">Items en Carritos</p>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="icon bg-danger bg-opacity-25 text-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Sin Stock</small>
+                        <h3>{{ productos_agotados }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <h4 class="mb-3"><i class="bi bi-lightning text-warning"></i> Acciones Rápidas</h4>
-        <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <a href="{% url 'solicitudes_admin' %}" class="quick-action">
-                    <i class="bi bi-list-check text-warning"></i>
-                    Ver Solicitudes
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="{% url 'gestion_stock' %}" class="quick-action">
-                    <i class="bi bi-boxes" style="color: #ff6600;"></i>
-                    Gestionar Stock
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="{% url 'importar_precios' %}" class="quick-action">
-                    <i class="bi bi-cloud-download text-info"></i>
-                    Sincronizar Precios API
-                </a>
-            </div>
-            <div class="col-md-3">
-                <a href="/admin/" class="quick-action">
-                    <i class="bi bi-gear text-secondary"></i>
-                    Django Admin
-                </a>
-            </div>
-        </div>
-
-        <!-- Utilidades -->
-        <h4 class="mb-3"><i class="bi bi-tools text-info"></i> Utilidades de Desarrollo</h4>
-        <div class="utility-section">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <a href="{% url 'cargar_productos' %}" class="btn btn-success w-100 py-3">
-                        <i class="bi bi-database-add fs-4 d-block mb-2"></i>
-                        Cargar Productos Hardware Demo
-                    </a>
-                    <small class="text-muted d-block mt-2 text-center">Crea 16 productos de hardware reales</small>
+        <!-- Second Stats Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="icon bg-success bg-opacity-25 text-success">
+                        <i class="bi bi-calendar-check"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Ventas Este Mes</small>
+                        <h3 class="text-success">${{ ventas_mes|floatformat:0 }}</h3>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <a href="{% url 'limpiar_productos' %}" class="btn btn-danger w-100 py-3">
-                        <i class="bi bi-trash3 fs-4 d-block mb-2"></i>
-                        Limpiar Productos API
-                    </a>
-                    <small class="text-muted d-block mt-2 text-center">Elimina productos de la categoría
-                        "Importados"</small>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="icon bg-warning bg-opacity-25 text-warning">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Pedidos Pendientes</small>
+                        <h3>{{ pedidos_pendientes }}</h3>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <a href="{% url 'catalogo' %}" class="btn btn-outline-light w-100 py-3">
-                        <i class="bi bi-eye fs-4 d-block mb-2"></i>
-                        Ver Catálogo Público
-                    </a>
-                    <small class="text-muted d-block mt-2 text-center">Vista del cliente</small>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="icon bg-purple bg-opacity-25" style="background: rgba(128,0,255,0.2); color: #8000ff;">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Suscriptores</small>
+                        <h3>{{ suscriptores }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="icon bg-info bg-opacity-25 text-info">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Pedidos Hoy</small>
+                        <h3>{{ pedidos_hoy }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <div class="row g-4 mb-4">
+            <!-- Sales Chart -->
+            <div class="col-lg-8">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-graph-up text-success"></i> Resumen de Ventas</h5>
+                    </div>
+                    <canvas id="salesChart" height="120"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Products -->
+            <div class="col-lg-4">
+                <div class="chart-container h-100">
+                    <h5 class="mb-3"><i class="bi bi-trophy text-warning"></i> Productos Más Vendidos</h5>
+                    {% for producto in productos_vendidos %}
+                    <div class="top-products-item">
+                        <div>
+                            <strong>{{ producto.nombre_producto|truncatewords:4 }}</strong>
+                        </div>
+                        <span class="badge bg-success">{{ producto.total_vendido }} uds</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">Sin datos aún</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Recent Orders -->
+            <div class="col-lg-8">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-clock-history text-info"></i> Últimos Pedidos</h5>
+                        <a href="{% url 'admin_pedidos' %}" class="btn btn-outline-info btn-sm">Ver todos</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-dark recent-orders-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Pedido</th>
+                                    <th>Cliente</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pedido in ultimos_pedidos %}
+                                <tr>
+                                    <td><a href="{% url 'detalle_pedido' pedido.id %}" class="text-info">#{{
+                                            pedido.numero_pedido }}</a></td>
+                                    <td>{{ pedido.usuario.username }}</td>
+                                    <td class="text-success">${{ pedido.total }}</td>
+                                    <td>
+                                        <span class="status-badge 
+                                            {% if pedido.estado == 'entregado' %}bg-success
+                                            {% elif pedido.estado == 'enviado' %}bg-info
+                                            {% elif pedido.estado == 'procesando' %}bg-warning text-dark
+                                            {% elif pedido.estado == 'cancelado' %}bg-danger
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ pedido.get_estado_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-muted">{{ pedido.fecha_pedido|date:"d/m/Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Sin pedidos aún</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="col-lg-4">
+                <div class="chart-container h-100">
+                    <h5 class="mb-3"><i class="bi bi-lightning text-warning"></i> Acciones Rápidas</h5>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <a href="{% url 'admin_pedidos' %}" class="quick-action">
+                                <i class="bi bi-bag text-warning"></i>
+                                Pedidos
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'admin_cupones' %}" class="quick-action">
+                                <i class="bi bi-tag text-success"></i>
+                                Cupones
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'gestion_stock' %}" class="quick-action">
+                                <i class="bi bi-boxes" style="color: var(--neon-orange);"></i>
+                                Stock
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'solicitudes_admin' %}" class="quick-action">
+                                <i class="bi bi-list-check text-info"></i>
+                                Solicitudes
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'cargar_productos' %}" class="quick-action">
+                                <i class="bi bi-database-add text-primary"></i>
+                                Demo Data
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'catalogo' %}" class="quick-action">
+                                <i class="bi bi-eye text-secondary"></i>
+                                Ver Tienda
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Sales Chart
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            const ventasMes = {{ ventas_mes|default: 0 }};
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                    datasets: [{
+                        label: 'Ventas $',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ventasMes],
+                        borderColor: '#00ff88',
+                        backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#aaa' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: '#aaa' }
+                        }
+                    }
+                }
+            });
+        </script>
 </body>
 
 </html>
