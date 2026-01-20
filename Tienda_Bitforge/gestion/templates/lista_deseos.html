@@ -1,0 +1,227 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Lista de Deseos | BitForge</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-pink: #ff0080;
+            --glass-bg: rgba(30, 30, 30, 0.85);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3,
+        .navbar-brand {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-green);
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-pink);
+            box-shadow: 0 10px 40px rgba(255, 0, 128, 0.2);
+        }
+
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-neon:hover {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .btn-pink {
+            background: var(--neon-pink);
+            border: none;
+            color: #fff;
+        }
+
+        .btn-pink:hover {
+            box-shadow: 0 0 20px var(--neon-pink);
+            color: #fff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            color: var(--neon-pink);
+            opacity: 0.5;
+            margin-bottom: 20px;
+        }
+
+        .wishlist-heart {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            color: var(--neon-pink);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand text-neon" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
+            <div class="ms-auto d-flex gap-2">
+                <a href="{% url 'ver_carrito' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-cart"></i> Carrito
+                </a>
+                <a href="{% url 'catalogo' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-grid"></i> Catálogo
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-5 mb-3">
+                <i class="bi bi-heart-fill" style="color: var(--neon-pink);"></i>
+                Mi Lista de Deseos
+            </h1>
+            <p class="text-secondary">Productos que has guardado para más tarde</p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if deseos %}
+        <div class="row g-4">
+            {% for item in deseos %}
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="glass-card h-100 position-relative">
+                    <i class="bi bi-heart-fill wishlist-heart"></i>
+
+                    <a href="{% url 'detalle_producto' item.producto.id %}">
+                        <div style="height: 200px; overflow: hidden;">
+                            <img src="{{ item.producto.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=300' }}"
+                                class="w-100 h-100" style="object-fit: contain; background: #fff;"
+                                alt="{{ item.producto.nombre }}">
+                        </div>
+                    </a>
+
+                    <div class="p-3">
+                        <h6 class="mb-2">{{ item.producto.nombre|truncatewords:6 }}</h6>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fs-5 text-neon fw-bold">${{ item.producto.precio }}</span>
+                            {% if item.producto.stock > 0 %}
+                            <span class="badge bg-success">En Stock</span>
+                            {% else %}
+                            <span class="badge bg-danger">Agotado</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            {% if item.producto.stock > 0 %}
+                            <a href="{% url 'mover_deseos_carrito' item.producto.id %}" class="btn btn-neon">
+                                <i class="bi bi-cart-plus"></i> Mover al Carrito
+                            </a>
+                            {% else %}
+                            <button class="btn btn-secondary" disabled>
+                                <i class="bi bi-x-circle"></i> Sin Stock
+                            </button>
+                            {% endif %}
+                            <a href="{% url 'eliminar_deseos' item.producto.id %}"
+                                class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a>
+                        </div>
+
+                        <small class="text-secondary d-block mt-2">
+                            <i class="bi bi-clock"></i> Agregado {{ item.fecha_agregado|timesince }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="glass-card">
+            <div class="empty-state">
+                <i class="bi bi-heart"></i>
+                <h3>Tu lista de deseos está vacía</h3>
+                <p class="text-secondary mb-4">Explora nuestro catálogo y guarda tus productos favoritos</p>
+                <a href="{% url 'catalogo' %}" class="btn btn-pink btn-lg px-5">
+                    <i class="bi bi-search"></i> Explorar Catálogo
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

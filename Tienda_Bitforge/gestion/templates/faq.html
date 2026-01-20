@@ -1,0 +1,299 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preguntas Frecuentes | BitForge</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-blue: #00ccff;
+            --glass-bg: rgba(30, 30, 30, 0.85);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3,
+        .navbar-brand {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-green);
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+        }
+
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-neon:hover {
+            background: var(--neon-green);
+            color: #000;
+        }
+
+        .accordion-item {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 10px;
+            border-radius: 10px !important;
+            overflow: hidden;
+        }
+
+        .accordion-button {
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            font-weight: 600;
+            padding: 20px 25px;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--neon-green);
+            box-shadow: none;
+        }
+
+        .accordion-button::after {
+            filter: invert(1);
+        }
+
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(0, 255, 136, 0.25);
+        }
+
+        .accordion-body {
+            background: rgba(0, 0, 0, 0.3);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 20px 25px;
+        }
+
+        .faq-category {
+            color: var(--neon-green);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            padding-left: 15px;
+            border-left: 3px solid var(--neon-green);
+        }
+
+        .hero-faq {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 255, 0.1));
+            padding: 60px 0;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand text-neon" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
+            <div class="ms-auto">
+                <a href="{% url 'contacto' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-chat-dots"></i> Contacto
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero-faq">
+        <div class="container">
+            <h1 class="display-4 mb-3">
+                <i class="bi bi-question-circle text-neon"></i> Preguntas Frecuentes
+            </h1>
+            <p class="text-secondary fs-5">Encuentra respuestas a las dudas más comunes</p>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+
+                <!-- Compras y Pedidos -->
+                <div class="faq-category">Compras y Pedidos</div>
+                <div class="accordion mb-5" id="faqCompras">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq1">
+                                <i class="bi bi-cart me-2"></i> ¿Cómo realizo una compra?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqCompras">
+                            <div class="accordion-body">
+                                Realizar una compra es muy sencillo:
+                                <ol class="mt-2">
+                                    <li>Navega por nuestro catálogo y agrega productos a tu carrito</li>
+                                    <li>Revisa tu carrito y aplica cupones si tienes</li>
+                                    <li>Haz clic en "Proceder al pago"</li>
+                                    <li>Completa tus datos de envío</li>
+                                    <li>Confirma el pedido (el pago es simulado)</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq2">
+                                <i class="bi bi-clock-history me-2"></i> ¿Cuánto tarda en llegar mi pedido?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqCompras">
+                            <div class="accordion-body">
+                                Los tiempos de entrega varían según tu ubicación:
+                                <ul class="mt-2">
+                                    <li><strong>Guayaquil:</strong> 1-2 días hábiles</li>
+                                    <li><strong>Quito:</strong> 2-3 días hábiles</li>
+                                    <li><strong>Otras ciudades:</strong> 3-5 días hábiles</li>
+                                </ul>
+                                Puedes rastrear el estado de tu pedido en "Mis Pedidos".
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq3">
+                                <i class="bi bi-percent me-2"></i> ¿Cómo uso un cupón de descuento?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqCompras">
+                            <div class="accordion-body">
+                                En la página del carrito o en checkout, encontrarás un campo para ingresar tu código de
+                                cupón.
+                                Escribe el código y haz clic en "Aplicar". El descuento se reflejará automáticamente en
+                                el total.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos -->
+                <div class="faq-category">Productos y Garantía</div>
+                <div class="accordion mb-5" id="faqProductos">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq4">
+                                <i class="bi bi-shield-check me-2"></i> ¿Los productos tienen garantía?
+                            </button>
+                        </h2>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqProductos">
+                            <div class="accordion-body">
+                                ¡Sí! Todos nuestros productos tienen garantía:
+                                <ul class="mt-2">
+                                    <li><strong>Componentes:</strong> 1 año de garantía del fabricante</li>
+                                    <li><strong>PCs Armadas:</strong> 2 años de garantía BitForge</li>
+                                    <li><strong>Kits:</strong> 1 año de garantía</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq5">
+                                <i class="bi bi-box-seam me-2"></i> ¿Qué pasa si un producto está agotado?
+                            </button>
+                        </h2>
+                        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqProductos">
+                            <div class="accordion-body">
+                                Si un producto está agotado, puedes enviar una <strong>Solicitud a Bodega</strong>.
+                                Nuestro equipo contactará a proveedores y te notificaremos cuando esté disponible.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cuenta -->
+                <div class="faq-category">Mi Cuenta</div>
+                <div class="accordion mb-5" id="faqCuenta">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq6">
+                                <i class="bi bi-person-plus me-2"></i> ¿Cómo me registro?
+                            </button>
+                        </h2>
+                        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqCuenta">
+                            <div class="accordion-body">
+                                Haz clic en "Registro" en la barra de navegación. Solo necesitas un nombre de usuario y
+                                una contraseña segura.
+                                ¡Es gratis y te da acceso a todas las funciones de la tienda!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#faq7">
+                                <i class="bi bi-heart me-2"></i> ¿Qué es la lista de deseos?
+                            </button>
+                        </h2>
+                        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqCuenta">
+                            <div class="accordion-body">
+                                La lista de deseos te permite guardar productos para comprar después.
+                                Haz clic en el ícono de corazón en cualquier producto para agregarlo.
+                                Puedes acceder a tu lista en cualquier momento desde tu perfil.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <div class="glass-card p-4 text-center">
+                    <h4 class="mb-3">¿No encontraste tu respuesta?</h4>
+                    <p class="text-secondary mb-4">Nuestro equipo de soporte está listo para ayudarte</p>
+                    <a href="{% url 'contacto' %}" class="btn btn-neon btn-lg">
+                        <i class="bi bi-envelope"></i> Contáctanos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

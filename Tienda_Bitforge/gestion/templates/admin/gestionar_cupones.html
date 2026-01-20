@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Cupones | BitForge Admin</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-orange: #ff9900;
+            --glass-bg: rgba(30, 30, 30, 0.85);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3,
+        .navbar-brand {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-orange);
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+        }
+
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-neon:hover {
+            background: var(--neon-green);
+            color: #000;
+        }
+
+        .form-control,
+        .form-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--neon-green);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-label {
+            color: var(--neon-orange);
+            font-weight: 500;
+        }
+
+        .coupon-card {
+            background: rgba(255, 153, 0, 0.1);
+            border: 2px dashed rgba(255, 153, 0, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .coupon-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 153, 0, 0.2);
+        }
+
+        .coupon-card.inactive {
+            opacity: 0.6;
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(50, 50, 50, 0.5);
+        }
+
+        .coupon-code {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-orange);
+            letter-spacing: 3px;
+        }
+
+        .discount-badge {
+            background: linear-gradient(135deg, #ff9900, #ff6600);
+            color: #000;
+            font-size: 1.8rem;
+            font-weight: bold;
+            padding: 15px 25px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .table-dark-custom {
+            --bs-table-bg: transparent;
+            --bs-table-color: #fff;
+        }
+
+        .table-dark-custom th {
+            background: rgba(255, 153, 0, 0.2);
+            color: var(--neon-orange);
+        }
+
+        .table-dark-custom td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'panel_admin' %}">
+                <i class="bi bi-shield-lock text-warning"></i> BITFORGE ADMIN
+            </a>
+            <div class="ms-auto d-flex gap-2">
+                <a href="{% url 'admin_pedidos' %}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-bag"></i> Pedidos
+                </a>
+                <a href="{% url 'panel_admin' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-speedometer2"></i> Panel
+                </a>
+                <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-house"></i> Tienda
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="row">
+            <!-- Formulario Crear Cupón -->
+            <div class="col-lg-4 mb-4">
+                <div class="glass-card p-4">
+                    <h4 class="mb-4" style="color: var(--neon-orange);">
+                        <i class="bi bi-plus-circle"></i> Crear Nuevo Cupón
+                    </h4>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Código del Cupón</label>
+                            <input type="text" name="codigo" class="form-control" placeholder="Ej: DESCUENTO20" required
+                                style="text-transform: uppercase;">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <input type="text" name="descripcion" class="form-control"
+                                placeholder="Ej: Cupón de bienvenida">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Porcentaje de Descuento (%)</label>
+                            <input type="number" name="descuento" class="form-control" min="1" max="100" value="10"
+                                required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de Expiración</label>
+                            <input type="date" name="fecha_expiracion" class="form-control" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 fw-bold">
+                            <i class="bi bi-check-circle"></i> Crear Cupón
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de Cupones -->
+            <div class="col-lg-8">
+                <h2 class="mb-4" style="color: var(--neon-orange);">
+                    <i class="bi bi-percent"></i> Cupones Activos
+                </h2>
+
+                {% if cupones %}
+                <div class="row g-4">
+                    {% for cupon in cupones %}
+                    <div class="col-md-6">
+                        <div class="coupon-card {% if not cupon.activo %}inactive{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <div class="coupon-code">{{ cupon.codigo }}</div>
+                                    <small class="text-secondary">{{ cupon.descripcion }}</small>
+                                </div>
+                                <div class="discount-badge">
+                                    {{ cupon.descuento_porcentaje }}%
+                                </div>
+                            </div>
+
+                            <div class="row text-center mb-3">
+                                <div class="col-4">
+                                    <div class="text-secondary small">Usado</div>
+                                    <div class="fw-bold">{{ cupon.usos_actuales }}/{{ cupon.usos_maximos }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-secondary small">Expira</div>
+                                    <div class="fw-bold">{{ cupon.fecha_expiracion|date:"d/m/Y" }}</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-secondary small">Estado</div>
+                                    {% if cupon.esta_vigente %}
+                                    <span class="badge bg-success">Vigente</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Expirado</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <a href="{% url 'admin_toggle_cupon' cupon.id %}"
+                                class="btn w-100 {% if cupon.activo %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                {% if cupon.activo %}
+                                <i class="bi bi-pause-circle"></i> Desactivar
+                                {% else %}
+                                <i class="bi bi-play-circle"></i> Activar
+                                {% endif %}
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="glass-card p-5 text-center">
+                    <i class="bi bi-ticket-perforated fs-1 text-secondary"></i>
+                    <p class="mt-3 text-secondary">No hay cupones creados</p>
+                    <p class="small text-secondary">Crea tu primer cupón usando el formulario</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

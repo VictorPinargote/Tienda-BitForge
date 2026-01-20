@@ -1,0 +1,312 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparar Productos | BitForge</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-blue: #00ccff;
+            --glass-bg: rgba(30, 30, 30, 0.85);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3,
+        .navbar-brand {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-green);
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+        }
+
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-neon:hover {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .comparison-table th:first-child,
+        .comparison-table td:first-child {
+            text-align: left;
+            color: var(--neon-green);
+            font-weight: 600;
+            width: 150px;
+        }
+
+        .comparison-table .product-header {
+            background: rgba(0, 255, 136, 0.1);
+            position: relative;
+        }
+
+        .comparison-table .product-header img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .price-highlight {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--neon-green);
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 53, 69, 0.8);
+            border: none;
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .remove-btn:hover {
+            background: #dc3545;
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            color: var(--neon-blue);
+            opacity: 0.5;
+            margin-bottom: 20px;
+        }
+
+        .badge-winner {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand text-neon" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
+            <div class="ms-auto d-flex gap-2">
+                <a href="{% url 'limpiar_comparar' %}" class="btn btn-outline-danger btn-sm">
+                    <i class="bi bi-x-circle"></i> Limpiar Todo
+                </a>
+                <a href="{% url 'catalogo' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-plus-circle"></i> Agregar Más
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-5 mb-3">
+                <i class="bi bi-arrow-left-right text-neon"></i>
+                Comparar Productos
+            </h1>
+            <p class="text-secondary">Compara hasta 4 productos lado a lado</p>
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if productos %}
+        <div class="glass-card p-4">
+            <div class="table-responsive">
+                <table class="comparison-table">
+                    <!-- Headers con Productos -->
+                    <thead>
+                        <tr>
+                            <th>Característica</th>
+                            {% for p in productos %}
+                            <th class="product-header">
+                                <a href="{% url 'eliminar_comparar' p.id %}" class="remove-btn" title="Quitar">
+                                    <i class="bi bi-x"></i>
+                                </a>
+                                <img src="{{ p.imagen_url|default:'https://via.placeholder.com/150' }}"
+                                    alt="{{ p.nombre }}">
+                                <h6>{{ p.nombre|truncatewords:5 }}</h6>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Precio -->
+                        <tr>
+                            <td><i class="bi bi-currency-dollar"></i> Precio</td>
+                            {% for p in productos %}
+                            <td>
+                                <span class="price-highlight">${{ p.precio }}</span>
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Categoría -->
+                        <tr>
+                            <td><i class="bi bi-tag"></i> Categoría</td>
+                            {% for p in productos %}
+                            <td>{{ p.categoria.nombre }}</td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Tipo -->
+                        <tr>
+                            <td><i class="bi bi-box"></i> Tipo</td>
+                            {% for p in productos %}
+                            <td>
+                                <span class="badge bg-primary">{{ p.get_tipo_display }}</span>
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Stock -->
+                        <tr>
+                            <td><i class="bi bi-archive"></i> Stock</td>
+                            {% for p in productos %}
+                            <td>
+                                {% if p.stock > 5 %}
+                                <span class="text-success"><i class="bi bi-check-circle-fill"></i> {{ p.stock }}
+                                    unidades</span>
+                                {% elif p.stock > 0 %}
+                                <span class="text-warning"><i class="bi bi-exclamation-triangle-fill"></i> {{ p.stock }}
+                                    unidades</span>
+                                {% else %}
+                                <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Agotado</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Estado -->
+                        <tr>
+                            <td><i class="bi bi-info-circle"></i> Disponibilidad</td>
+                            {% for p in productos %}
+                            <td>
+                                {% if p.disponible %}
+                                <span class="badge bg-success">Disponible</span>
+                                {% else %}
+                                <span class="badge bg-danger">No Disponible</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Proveedor -->
+                        <tr>
+                            <td><i class="bi bi-truck"></i> Proveedor</td>
+                            {% for p in productos %}
+                            <td>{{ p.proveedor.nombre|default:"N/A" }}</td>
+                            {% endfor %}
+                        </tr>
+
+                        <!-- Acción -->
+                        <tr>
+                            <td></td>
+                            {% for p in productos %}
+                            <td>
+                                {% if p.stock > 0 %}
+                                <a href="{% url 'agregar_carrito' p.id %}" class="btn btn-neon">
+                                    <i class="bi bi-cart-plus"></i> Agregar
+                                </a>
+                                {% else %}
+                                <button class="btn btn-secondary" disabled>Sin Stock</button>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="glass-card">
+            <div class="empty-state">
+                <i class="bi bi-arrow-left-right"></i>
+                <h3>No hay productos para comparar</h3>
+                <p class="text-secondary mb-4">Agrega productos desde el catálogo para comenzar a comparar</p>
+                <a href="{% url 'catalogo' %}" class="btn btn-neon btn-lg px-5">
+                    <i class="bi bi-grid"></i> Ver Catálogo
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

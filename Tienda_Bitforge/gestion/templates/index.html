@@ -113,9 +113,30 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'catalogo' %}">Catálogo</a></li>
 
                     {% if user.is_authenticated %}
-                    {# SOLO CLIENTES ven Mis Solicitudes #}
+                    {# DROPDOWN MI CUENTA PARA CLIENTES #}
                     {% if not user.is_staff %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'mis_solicitudes' %}">Mis Solicitudes</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> Mi Cuenta
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li><a class="dropdown-item" href="{% url 'mi_perfil' %}"><i class="bi bi-person"></i> Mi
+                                    Perfil</a></li>
+                            <li><a class="dropdown-item" href="{% url 'mis_pedidos' %}"><i class="bi bi-bag"></i> Mis
+                                    Pedidos</a></li>
+                            <li><a class="dropdown-item" href="{% url 'lista_deseos' %}"><i class="bi bi-heart"></i>
+                                    Lista Deseos</a></li>
+                            <li><a class="dropdown-item" href="{% url 'comparar_productos' %}"><i
+                                        class="bi bi-arrow-left-right"></i> Comparar</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'mis_solicitudes' %}"><i
+                                        class="bi bi-box-seam"></i> Mis Solicitudes</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link text-warning" href="{% url 'ofertas' %}"><i
+                                class="bi bi-lightning-charge"></i> Ofertas</a></li>
                     {% endif %}
 
                     {# SOLO STAFF/ADMIN ve el menú Admin #}
@@ -127,6 +148,13 @@
                         <ul class="dropdown-menu dropdown-menu-dark">
                             <li><a class="dropdown-item" href="{% url 'panel_admin' %}"><i
                                         class="bi bi-speedometer2"></i> Panel Control</a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_pedidos' %}"><i
+                                        class="bi bi-bag-check"></i> Gestionar Pedidos</a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_cupones' %}"><i class="bi bi-percent"></i>
+                                    Gestionar Cupones</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item" href="{% url 'solicitudes_admin' %}"><i
                                         class="bi bi-list-check"></i> Ver Solicitudes</a></li>
                             <li><a class="dropdown-item" href="{% url 'gestion_stock' %}"><i class="bi bi-boxes"></i>
@@ -321,9 +349,44 @@
         </div>
     </div>
 
-    <footer class="bg-black text-secondary text-center py-4 border-top border-dark">
+    <footer class="bg-black text-secondary py-5 border-top border-dark">
         <div class="container">
-            <small>BITFORGE SYSTEMS &copy; 2024 | Sistema de Gestión de Hardware v1.0</small>
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="text-neon mb-3"><i class="bi bi-cpu"></i> BITFORGE</h5>
+                    <p class="small">Tu tienda especializada en hardware de alto rendimiento. Componentes premium, PCs
+                        Armadas y Kits de actualización.</p>
+                </div>
+                <div class="col-md-2 mb-4 mb-md-0">
+                    <h6 class="text-white mb-3">Tienda</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="{% url 'catalogo' %}" class="text-secondary text-decoration-none">Catálogo</a></li>
+                        <li><a href="{% url 'ofertas' %}" class="text-secondary text-decoration-none">Ofertas</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <h6 class="text-white mb-3">Información</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="{% url 'sobre_nosotros' %}" class="text-secondary text-decoration-none">Sobre
+                                Nosotros</a></li>
+                        <li><a href="{% url 'faq' %}" class="text-secondary text-decoration-none">Preguntas
+                                Frecuentes</a></li>
+                        <li><a href="{% url 'contacto' %}" class="text-secondary text-decoration-none">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-white mb-3">Síguenos</h6>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-twitter-x"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="text-center">
+                <small>BITFORGE SYSTEMS &copy; 2024 | Sistema de Gestión de Hardware v2.0</small>
+            </div>
         </div>
     </footer>
 

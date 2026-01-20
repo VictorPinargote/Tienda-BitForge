@@ -1,0 +1,285 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto | BitForge</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-blue: #00ccff;
+            --glass-bg: rgba(30, 30, 30, 0.85);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3,
+        .navbar-brand {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-green);
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+        }
+
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-neon:hover {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .form-control,
+        .form-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--neon-green);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-label {
+            color: var(--neon-green);
+            font-weight: 500;
+        }
+
+        .contact-info-card {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .contact-info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .contact-info-card i {
+            font-size: 2.5rem;
+            color: var(--neon-green);
+            margin-bottom: 15px;
+        }
+
+        .hero-contact {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 255, 0.1));
+            padding: 60px 0;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1.5rem;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+
+        .social-icons a:hover {
+            background: var(--neon-green);
+            color: #000;
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand text-neon" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
+            <div class="ms-auto">
+                <a href="{% url 'faq' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-question-circle"></i> FAQ
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero-contact">
+        <div class="container">
+            <h1 class="display-4 mb-3">
+                <i class="bi bi-chat-dots text-neon"></i> Contáctanos
+            </h1>
+            <p class="text-secondary fs-5">Estamos aquí para ayudarte</p>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="row">
+            <!-- Formulario de Contacto -->
+            <div class="col-lg-7 mb-4">
+                <div class="glass-card p-4">
+                    <h4 class="text-neon mb-4">
+                        <i class="bi bi-envelope"></i> Envíanos un Mensaje
+                    </h4>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre</label>
+                                <input type="text" name="nombre" class="form-control" placeholder="Tu nombre" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" name="email" class="form-control" placeholder="tu@email.com"
+                                    required>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Asunto</label>
+                                <select name="asunto" class="form-select">
+                                    <option value="consulta">Consulta General</option>
+                                    <option value="soporte">Soporte Técnico</option>
+                                    <option value="pedido">Problema con Pedido</option>
+                                    <option value="garantia">Garantía</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Mensaje</label>
+                                <textarea name="mensaje" class="form-control" rows="5"
+                                    placeholder="Escribe tu mensaje aquí..." required></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-neon btn-lg">
+                                    <i class="bi bi-send"></i> Enviar Mensaje
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información de Contacto -->
+            <div class="col-lg-5">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="contact-info-card">
+                            <i class="bi bi-geo-alt"></i>
+                            <h5>Ubicación</h5>
+                            <p class="text-secondary mb-0">
+                                Av. Tecnología 123<br>
+                                Guayaquil, Ecuador
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-12">
+                        <div class="contact-info-card">
+                            <i class="bi bi-telephone"></i>
+                            <h5>Teléfono</h5>
+                            <p class="text-secondary mb-0">+593 4 123 4567</p>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 col-lg-12">
+                        <div class="contact-info-card">
+                            <i class="bi bi-envelope"></i>
+                            <h5>Email</h5>
+                            <p class="text-secondary mb-0">soporte@bitforge.ec</p>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="contact-info-card">
+                            <i class="bi bi-clock"></i>
+                            <h5>Horario de Atención</h5>
+                            <p class="text-secondary mb-0">
+                                Lun - Vie: 9:00 - 18:00<br>
+                                Sáb: 10:00 - 14:00
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="glass-card p-4 text-center">
+                            <h5 class="mb-3">Síguenos</h5>
+                            <div class="social-icons">
+                                <a href="#"><i class="bi bi-facebook"></i></a>
+                                <a href="#"><i class="bi bi-instagram"></i></a>
+                                <a href="#"><i class="bi bi-twitter-x"></i></a>
+                                <a href="#"><i class="bi bi-youtube"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
