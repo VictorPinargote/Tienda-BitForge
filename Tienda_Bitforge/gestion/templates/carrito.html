@@ -161,6 +161,36 @@
             background: #fff;
             border-radius: 8px;
         }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .total-box {
+                position: static;
+                margin-top: 20px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .cart-item .row {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+
+            .cart-item img {
+                width: 120px;
+                height: 120px;
+                margin: 0 auto;
+            }
+
+            .cart-container {
+                padding: 15px;
+            }
+
+            .suggestion-card img {
+                height: 80px;
+            }
+        }
     </style>
 </head>
 

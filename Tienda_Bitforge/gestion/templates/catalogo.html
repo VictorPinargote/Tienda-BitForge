@@ -219,6 +219,38 @@
             border-color: var(--neon-green);
             color: #000;
         }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .filter-sidebar {
+                position: static;
+                margin-bottom: 20px;
+            }
+
+            .category-pills {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .glass-card img {
+                height: 140px;
+            }
+
+            .quick-actions {
+                opacity: 1;
+            }
+
+            .compare-count {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .compare-count .btn {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 
