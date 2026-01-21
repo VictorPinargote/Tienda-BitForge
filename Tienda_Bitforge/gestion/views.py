@@ -22,7 +22,12 @@ def home(request):
 
 
 # Vista de registro con roles
-CODIGO_BODEGA_SECRETO = "bitforge2024"  # Código que solo tú conoces
+# Códigos secretos para cada rol
+CODIGOS_ROLES = {
+    'bodeguero': 'bodega1470',
+    'supervisor': 'superv1470', 
+    'admin': 'admin76',
+}
 
 def guardar_usuario_json(username, tipo_usuario):
     """Guarda el usuario en el archivo JSON de docs/users.json"""
@@ -65,9 +70,9 @@ def registro(request):
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
         rol = request.POST.get('rol', 'cliente')
-        codigo_bodega = request.POST.get('codigo_bodega', '')
+        codigo_rol = request.POST.get('codigo_rol', '')
         
-        # Validaciones
+        # Validaciones básicas
         if not username or not password1:
             messages.error(request, 'Todos los campos son obligatorios')
             return render(request, 'registration/registro.html')
@@ -86,27 +91,35 @@ def registro(request):
             messages.error(request, 'El nombre de usuario ya existe')
             return render(request, 'registration/registro.html')
         
-        # Si es bodeguero, verificar código
-        if rol == 'bodeguero':
-            if codigo_bodega != CODIGO_BODEGA_SECRETO:
-                messages.error(request, '❌ Código de bodega incorrecto. Contacta al administrador.')
+        # Verificar código secreto para roles que lo requieren
+        if rol in CODIGOS_ROLES:
+            codigo_correcto = CODIGOS_ROLES.get(rol, '')
+            if codigo_rol != codigo_correcto:
+                messages.error(request, f'❌ Código de {rol} incorrecto. Contacta al administrador.')
                 return render(request, 'registration/registro.html')
         
         # Crear usuario en la base de datos
         user = User.objects.create_user(username=username, password=password1)
         
-        # Determinar tipo de usuario
-        tipo_usuario = 'cliente'
-        if rol == 'bodeguero':
+        # Configurar permisos según el rol
+        if rol in ['bodeguero', 'supervisor', 'admin']:
             user.is_staff = True
             user.save()
-            tipo_usuario = 'bodeguero'
-            messages.success(request, '✅ Cuenta de Bodeguero creada correctamente')
-        else:
-            messages.success(request, '✅ Cuenta de Cliente creada correctamente')
+        
+        # Crear perfil con el rol correspondiente
+        PerfilUsuario.objects.create(usuario=user, rol=rol)
         
         # Guardar en JSON también
-        guardar_usuario_json(username, tipo_usuario)
+        guardar_usuario_json(username, rol)
+        
+        # Mensaje de éxito según el rol
+        mensajes_rol = {
+            'cliente': '✅ Cuenta de Cliente creada correctamente',
+            'bodeguero': '✅ Cuenta de Bodeguero creada correctamente',
+            'supervisor': '✅ Cuenta de Supervisor creada correctamente',
+            'admin': '✅ Cuenta de Administrador creada correctamente',
+        }
+        messages.success(request, mensajes_rol.get(rol, '✅ Cuenta creada correctamente'))
         
         return redirect('login')
     

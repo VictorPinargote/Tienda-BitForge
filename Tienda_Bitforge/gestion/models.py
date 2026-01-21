@@ -203,10 +203,14 @@ class ListaDeseos(models.Model):
 
 
 # Modelo de Cupón de Descuento
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 class Cupon(models.Model):
     codigo = models.CharField(max_length=20, unique=True)
     descripcion = models.CharField(max_length=100)
-    descuento_porcentaje = models.PositiveIntegerField()  # Porcentaje de descuento (1-100)
+    descuento_porcentaje = models.PositiveIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(100)]
+    )  # Porcentaje de descuento (1-100)
     descuento_maximo = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Tope máximo
     compra_minima = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Compra mínima requerida
     activo = models.BooleanField(default=True)
@@ -228,7 +232,15 @@ class Cupon(models.Model):
 
 # Modelo de Perfil de Usuario Extendido
 class PerfilUsuario(models.Model):
+    ROL_CHOICES = [
+        ('cliente', 'Cliente'),
+        ('bodeguero', 'Bodeguero'),
+        ('supervisor', 'Supervisor'),
+        ('admin', 'Administrador'),
+    ]
+    
     usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil')
+    rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='cliente')
     telefono = models.CharField(max_length=20, blank=True)
     direccion = models.TextField(blank=True)
     ciudad = models.CharField(max_length=50, blank=True)
@@ -236,7 +248,34 @@ class PerfilUsuario(models.Model):
     fecha_nacimiento = models.DateField(null=True, blank=True)
     
     def __str__(self):
-        return f"Perfil de {self.usuario.username}"
+        return f"Perfil de {self.usuario.username} ({self.get_rol_display()})"
+    
+    def es_cliente(self):
+        return self.rol == 'cliente'
+    
+    def es_bodeguero(self):
+        return self.rol == 'bodeguero'
+    
+    def es_supervisor(self):
+        return self.rol == 'supervisor'
+    
+    def es_admin(self):
+        return self.rol == 'admin'
+    
+    def puede_ver_pedidos(self):
+        return self.rol in ['supervisor', 'admin'] or self.usuario.is_superuser
+    
+    def puede_ver_productos(self):
+        return self.rol in ['bodeguero', 'admin'] or self.usuario.is_superuser
+    
+    def puede_gestionar_usuarios(self):
+        return self.rol in ['supervisor', 'admin'] or self.usuario.is_superuser
+    
+    def puede_ver_cupones(self):
+        return self.rol in ['supervisor', 'admin'] or self.usuario.is_superuser
+    
+    def puede_ver_graficas(self):
+        return self.rol in ['supervisor', 'admin'] or self.usuario.is_superuser
     
     class Meta:
         verbose_name_plural = "Perfiles de Usuario"

@@ -14,6 +14,9 @@
     <style>
         :root {
             --neon-green: #00ff88;
+            --neon-blue: #00ccff;
+            --neon-orange: #ff9900;
+            --neon-purple: #9966ff;
         }
 
         body {
@@ -23,15 +26,16 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #fff;
         }
 
         .register-card {
-            background: rgba(30, 30, 30, 0.9);
+            background: rgba(30, 30, 30, 0.95);
             border: 1px solid rgba(0, 255, 136, 0.3);
             border-radius: 15px;
             padding: 40px;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
         }
 
         .brand-title {
@@ -40,11 +44,21 @@
             text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
 
+        /* IMPORTANTE: Labels y textos en BLANCO */
+        .form-label,
+        label {
+            color: #fff !important;
+        }
+
         .form-control,
         .form-select {
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid #444;
             color: #fff;
+        }
+
+        .form-control::placeholder {
+            color: #888;
         }
 
         .form-control:focus,
@@ -72,20 +86,22 @@
             color: var(--neon-green);
         }
 
+        /* Selector de Roles - 4 opciones */
         .role-selector {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             margin-bottom: 20px;
         }
 
         .role-option {
-            flex: 1;
-            padding: 15px;
+            padding: 15px 10px;
             border: 2px solid #444;
             border-radius: 10px;
             text-align: center;
             cursor: pointer;
             transition: 0.3s;
+            color: #fff;
         }
 
         .role-option:hover {
@@ -93,32 +109,72 @@
         }
 
         .role-option.active {
-            border-color: var(--neon-green);
             background: rgba(0, 255, 136, 0.1);
         }
 
-        .role-option i {
-            font-size: 2rem;
-            display: block;
-            margin-bottom: 10px;
+        .role-option[data-role="cliente"].active {
+            border-color: var(--neon-green);
         }
 
-        .bodeguero-field {
+        .role-option[data-role="bodeguero"].active {
+            border-color: var(--neon-orange);
+        }
+
+        .role-option[data-role="supervisor"].active {
+            border-color: var(--neon-blue);
+        }
+
+        .role-option[data-role="admin"].active {
+            border-color: var(--neon-purple);
+        }
+
+        .role-option i {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .role-option strong {
+            color: #fff;
+        }
+
+        .role-option small {
+            color: #aaa;
+        }
+
+        .codigo-field {
             display: none;
         }
 
-        .bodeguero-field.show {
+        .codigo-field.show {
             display: block;
+        }
+
+        /* Colores de iconos por rol */
+        .icon-cliente {
+            color: var(--neon-green);
+        }
+
+        .icon-bodeguero {
+            color: var(--neon-orange);
+        }
+
+        .icon-supervisor {
+            color: var(--neon-blue);
+        }
+
+        .icon-admin {
+            color: var(--neon-purple);
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
+    <div class="container py-4">
         <div class="register-card mx-auto">
             <div class="text-center mb-4">
                 <h2 class="brand-title"><i class="bi bi-cpu"></i> BITFORGE</h2>
-                <p class="text-muted">Crear nueva cuenta</p>
+                <p class="text-white-50">Crear nueva cuenta</p>
             </div>
 
             {% if messages %}
@@ -134,28 +190,38 @@
             <form method="post" id="registerForm">
                 {% csrf_token %}
 
-                <!-- Selector de Rol -->
-                <label class="form-label text-muted small">Tipo de cuenta</label>
+                <!-- Selector de Rol - 4 OPCIONES -->
+                <label class="form-label mb-2">Tipo de cuenta</label>
                 <div class="role-selector">
                     <div class="role-option active" data-role="cliente" onclick="selectRole('cliente')">
-                        <i class="bi bi-person text-neon"></i>
+                        <i class="bi bi-person icon-cliente"></i>
                         <strong>Cliente</strong>
-                        <small class="d-block text-muted">Comprar y solicitar</small>
+                        <small class="d-block">Comprar productos</small>
                     </div>
                     <div class="role-option" data-role="bodeguero" onclick="selectRole('bodeguero')">
-                        <i class="bi bi-box-seam" style="color: #ff6600;"></i>
+                        <i class="bi bi-box-seam icon-bodeguero"></i>
                         <strong>Bodeguero</strong>
-                        <small class="d-block text-muted">Gestionar stock</small>
+                        <small class="d-block">Gestionar stock</small>
+                    </div>
+                    <div class="role-option" data-role="supervisor" onclick="selectRole('supervisor')">
+                        <i class="bi bi-eye icon-supervisor"></i>
+                        <strong>Supervisor</strong>
+                        <small class="d-block">Supervisar operaciones</small>
+                    </div>
+                    <div class="role-option" data-role="admin" onclick="selectRole('admin')">
+                        <i class="bi bi-shield-lock icon-admin"></i>
+                        <strong>Administrador</strong>
+                        <small class="d-block">Gestión total</small>
                     </div>
                 </div>
                 <input type="hidden" name="rol" id="rolInput" value="cliente">
 
-                <!-- Campo secreto para Bodeguero -->
-                <div class="mb-3 bodeguero-field" id="codigoField">
-                    <label class="form-label">Código de Bodega <span class="text-danger">*</span></label>
-                    <input type="password" name="codigo_bodega" class="form-control"
-                        placeholder="Ingresa el código secreto">
-                    <small class="text-muted">Solicita este código al administrador</small>
+                <!-- Campo de código secreto (para roles que lo requieren) -->
+                <div class="mb-3 codigo-field" id="codigoField">
+                    <label class="form-label">Código de Acceso <span class="text-danger">*</span></label>
+                    <input type="password" name="codigo_rol" class="form-control"
+                        placeholder="Ingresa el código secreto" id="codigoInput">
+                    <small class="text-white-50">Solicita este código al administrador del sistema</small>
                 </div>
 
                 <!-- Campos del formulario -->
@@ -180,7 +246,7 @@
                     <i class="bi bi-person-plus"></i> Crear Cuenta
                 </button>
 
-                <p class="text-center text-muted mb-0">
+                <p class="text-center text-white-50 mb-0">
                     ¿Ya tienes cuenta? <a href="{% url 'login' %}" class="text-neon">Iniciar Sesión</a>
                 </p>
             </form>
@@ -196,12 +262,20 @@
             // Actualizar input hidden
             document.getElementById('rolInput').value = role;
 
-            // Mostrar/ocultar campo de código
+            // Mostrar/ocultar campo de código según el rol
             const codigoField = document.getElementById('codigoField');
-            if (role === 'bodeguero') {
+            const codigoInput = document.getElementById('codigoInput');
+
+            // Los roles que requieren código
+            const rolesConCodigo = ['bodeguero', 'supervisor', 'admin'];
+
+            if (rolesConCodigo.includes(role)) {
                 codigoField.classList.add('show');
+                codigoInput.required = true;
             } else {
                 codigoField.classList.remove('show');
+                codigoInput.required = false;
+                codigoInput.value = '';
             }
         }
     </script>
