@@ -66,24 +66,24 @@ urlpatterns = [
     path('producto/<int:producto_id>/', views.detalle_producto, name='detalle_producto'),
     path('catalogo/', views.catalogo, name='catalogo'),
 
-    # Admin/Staff
-    path('admin/solicitudes/', views.ver_solicitudes_admin, name='solicitudes_admin'),
-    path('admin/solicitud/completar/<int:solicitud_id>/', views.marcar_completada, name='marcar_completada'),
-    path('admin/panel/', views.panel_admin_mejorado, name='panel_admin'),
-    path('admin/pedidos/', views.admin_pedidos, name='admin_pedidos'),
-    path('admin/pedido/actualizar/<int:pedido_id>/', views.admin_actualizar_pedido, name='admin_actualizar_pedido'),
-    path('admin/cupones/', views.admin_cupones, name='admin_cupones'),
-    path('admin/cupon/toggle/<int:cupon_id>/', views.admin_toggle_cupon, name='admin_toggle_cupon'),
+    # Admin/Staff (USANDO staff/ EN VEZ DE admin/ PARA EVITAR CONFLICTO)
+    path('staff/solicitudes/', views.ver_solicitudes_admin, name='solicitudes_admin'),
+    path('staff/solicitud/completar/<int:solicitud_id>/', views.marcar_completada, name='marcar_completada'),
+    path('staff/panel/', views.panel_admin_mejorado, name='panel_admin'),
+    path('staff/pedidos/', views.admin_pedidos, name='admin_pedidos'),
+    path('staff/pedido/actualizar/<int:pedido_id>/', views.admin_actualizar_pedido, name='admin_actualizar_pedido'),
+    path('staff/cupones/', views.admin_cupones, name='admin_cupones'),
+    path('staff/cupon/toggle/<int:cupon_id>/', views.admin_toggle_cupon, name='admin_toggle_cupon'),
 
-    # Bodega/Stock (existente)
-    path('admin/stock/', views.gestion_stock, name='gestion_stock'),
-    path('admin/stock/actualizar/<int:producto_id>/', views.actualizar_stock, name='actualizar_stock'),
+    # Bodega/Stock
+    path('staff/stock/', views.gestion_stock, name='gestion_stock'),
+    path('staff/stock/actualizar/<int:producto_id>/', views.actualizar_stock, name='actualizar_stock'),
     
-    # Utilidades Admin (existente)
-    path('admin/cargar-productos/', views.cargar_productos_demo, name='cargar_productos'),
-    path('admin/limpiar-productos/', views.limpiar_productos, name='limpiar_productos'),
+    # Utilidades Admin
+    path('staff/cargar-productos/', views.cargar_productos_demo, name='cargar_productos'),
+    path('staff/limpiar-productos/', views.limpiar_productos, name='limpiar_productos'),
     
     # Nuevas funcionalidades Admin
-    path('admin/clientes/', views.admin_clientes, name='admin_clientes'),
-    path('admin/exportar/', views.admin_exportar_reporte, name='admin_exportar'),
+    path('staff/clientes/', views.admin_clientes, name='admin_clientes'),
+    path('staff/exportar/', views.admin_exportar_reporte, name='admin_exportar'),
 ]

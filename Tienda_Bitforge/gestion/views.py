@@ -24,6 +24,41 @@ def home(request):
 # Vista de registro con roles
 CODIGO_BODEGA_SECRETO = "bitforge2024"  # Código que solo tú conoces
 
+def guardar_usuario_json(username, tipo_usuario):
+    """Guarda el usuario en el archivo JSON de docs/users.json"""
+    import json
+    import os
+    from datetime import datetime
+    
+    # Ruta del archivo JSON
+    json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'docs', 'users.json')
+    
+    try:
+        # Leer usuarios existentes
+        if os.path.exists(json_path):
+            with open(json_path, 'r', encoding='utf-8') as f:
+                content = f.read().strip()
+                users = json.loads(content) if content else []
+        else:
+            users = []
+        
+        # Agregar nuevo usuario
+        nuevo_usuario = {
+            'username': username,
+            'tipo_usuario': tipo_usuario,
+            'fecha_registro': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+        users.append(nuevo_usuario)
+        
+        # Guardar archivo JSON
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(users, f, indent=2, ensure_ascii=False)
+            
+        return True
+    except Exception as e:
+        print(f"Error guardando usuario en JSON: {e}")
+        return False
+
 def registro(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -57,20 +92,26 @@ def registro(request):
                 messages.error(request, '❌ Código de bodega incorrecto. Contacta al administrador.')
                 return render(request, 'registration/registro.html')
         
-        # Crear usuario
+        # Crear usuario en la base de datos
         user = User.objects.create_user(username=username, password=password1)
         
-        # Si es bodeguero, hacerlo staff
+        # Determinar tipo de usuario
+        tipo_usuario = 'cliente'
         if rol == 'bodeguero':
             user.is_staff = True
             user.save()
+            tipo_usuario = 'bodeguero'
             messages.success(request, '✅ Cuenta de Bodeguero creada correctamente')
         else:
             messages.success(request, '✅ Cuenta de Cliente creada correctamente')
         
+        # Guardar en JSON también
+        guardar_usuario_json(username, tipo_usuario)
+        
         return redirect('login')
     
     return render(request, 'registration/registro.html')
+
 
 # Vista del carrito
 @login_required
@@ -234,38 +275,31 @@ def marcar_completada(request, solicitud_id):
     return redirect('solicitudes_admin')
 
 # Vista de importar precios (SOLO ACTUALIZA PRECIOS, NO CREA PRODUCTOS)
+@staff_member_required
 def importar_precios(request):
-    endpoint = 'https://fakestoreapi.com/products/category/electronics'
+    # Simulación de API de Precios Interna
+    # En lugar de usar una API externa que puede traer datos basura,
+    # simulamos fluctuaciones de mercado en tiempo real.
     try:
-        response = requests.get(endpoint, timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Solo actualizamos precios de productos EXISTENTES
-        productos_locales = Producto.objects.all()
+        productos = Producto.objects.all()
         count = 0
         
-        for prod in productos_locales:
-            precio_ref = random.choice(data)['price']
-            prod.precio = round(precio_ref * 10, 2)
+        for prod in productos:
+            # Fluctuación aleatoria entre -5% y +5%
+            fluctuacion = Decimal(random.uniform(0.95, 1.05))
+            nuevo_precio = prod.precio * fluctuacion
+            prod.precio = round(nuevo_precio, 2)
             prod.save()
             count += 1
             
-        messages.success(request, f'✅ Conexión con Proveedores Globales. {count} precios actualizados en tiempo real.')
+        messages.success(request, f'✅ Precios actualizados vía API BitForge Global. {count} productos sincronizados.')
         
     except Exception as e:
-        messages.error(request, f'❌ Error de conexión con proveedores: {str(e)}')
+        messages.error(request, f'Error en sincronización: {str(e)}')
         
-    return redirect('home')
+    return redirect('panel_admin')
 
-# Vista del detalle del producto
-def detalle_producto(request, producto_id):
-    producto = Producto.objects.get(id=producto_id)
-    relacionados = Producto.objects.filter(categoria=producto.categoria).exclude(id=producto_id)[:4]
-    return render(request, 'detalle_producto.html', {
-        'producto': producto,
-        'relacionados': relacionados
-    })
+
 
 # Vista del catalogo
 def catalogo(request):
@@ -352,70 +386,124 @@ def panel_admin(request):
         'total_ventas': total_ventas
     })
 
-# Vista para cargar productos de hardware iniciales
+# Vista para cargar productos desde JSON fixture
 @staff_member_required
 def cargar_productos_demo(request):
-    # Crear categorías de hardware
-    cat_gpu, _ = Categoria.objects.get_or_create(nombre='Tarjetas Gráficas', defaults={'descripcion': 'GPUs de alto rendimiento'})
-    cat_cpu, _ = Categoria.objects.get_or_create(nombre='Procesadores', defaults={'descripcion': 'CPUs Intel y AMD'})
-    cat_ram, _ = Categoria.objects.get_or_create(nombre='Memoria RAM', defaults={'descripcion': 'Módulos DDR4 y DDR5'})
-    cat_ssd, _ = Categoria.objects.get_or_create(nombre='Almacenamiento', defaults={'descripcion': 'SSD y HDD'})
-    cat_kit, _ = Categoria.objects.get_or_create(nombre='Kits', defaults={'descripcion': 'Combos de actualización'})
-    cat_pc, _ = Categoria.objects.get_or_create(nombre='PCs Armadas', defaults={'descripcion': 'Equipos listos para usar'})
+    import json
+    import os
     
-    # Productos de hardware reales
-    productos_hardware = [
-        {'nombre': 'NVIDIA RTX 4090 24GB', 'precio': 1599.99, 'stock': 5, 'categoria': cat_gpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400'},
-        {'nombre': 'NVIDIA RTX 4070 Ti 12GB', 'precio': 799.99, 'stock': 8, 'categoria': cat_gpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400'},
-        {'nombre': 'AMD Radeon RX 7900 XTX', 'precio': 999.99, 'stock': 3, 'categoria': cat_gpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400'},
-        {'nombre': 'Intel Core i9-14900K', 'precio': 589.99, 'stock': 10, 'categoria': cat_cpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1555618568-9b1686616012?w=400'},
-        {'nombre': 'Intel Core i7-14700K', 'precio': 409.99, 'stock': 12, 'categoria': cat_cpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1555618568-9b1686616012?w=400'},
-        {'nombre': 'AMD Ryzen 9 7950X3D', 'precio': 699.99, 'stock': 4, 'categoria': cat_cpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1555618568-9b1686616012?w=400'},
-        {'nombre': 'AMD Ryzen 7 7800X3D', 'precio': 449.99, 'stock': 7, 'categoria': cat_cpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1555618568-9b1686616012?w=400'},
-        {'nombre': 'Corsair Vengeance DDR5 32GB', 'precio': 149.99, 'stock': 20, 'categoria': cat_ram, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1562976540-1502c2145186?w=400'},
-        {'nombre': 'G.Skill Trident Z5 64GB DDR5', 'precio': 299.99, 'stock': 6, 'categoria': cat_ram, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1562976540-1502c2145186?w=400'},
-        {'nombre': 'Samsung 990 Pro 2TB NVMe', 'precio': 179.99, 'stock': 15, 'categoria': cat_ssd, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400'},
-        {'nombre': 'WD Black SN850X 1TB', 'precio': 89.99, 'stock': 25, 'categoria': cat_ssd, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400'},
-        {'nombre': 'Kit Gamer AMD Ryzen 7 + B650', 'precio': 699.99, 'stock': 3, 'categoria': cat_kit, 'tipo': 'kit', 'imagen_url': 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400'},
-        {'nombre': 'Kit Intel i5 + Z790 + 32GB', 'precio': 849.99, 'stock': 0, 'categoria': cat_kit, 'tipo': 'kit', 'imagen_url': 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400'},
-        {'nombre': 'PC Gamer BitForge TITAN', 'precio': 2499.99, 'stock': 2, 'categoria': cat_pc, 'tipo': 'pc_armada', 'imagen_url': 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400'},
-        {'nombre': 'PC Gamer BitForge PHOENIX', 'precio': 1799.99, 'stock': 4, 'categoria': cat_pc, 'tipo': 'pc_armada', 'imagen_url': 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400'},
-        {'nombre': 'PC Workstation BitForge PRO', 'precio': 3299.99, 'stock': 1, 'categoria': cat_pc, 'tipo': 'pc_armada', 'imagen_url': 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400'},
-    ]
+    # Ruta del fixture JSON
+    fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures', 'productos_hardware.json')
     
-    count = 0
-    for p in productos_hardware:
-        Producto.objects.update_or_create(
-            nombre=p['nombre'],
-            defaults={
-                'descripcion': f"Hardware de alto rendimiento - {p['categoria'].nombre}",
-                'precio': p['precio'],
-                'stock': p['stock'],
-                'categoria': p['categoria'],
-                'tipo': p['tipo'],
-                'imagen_url': p['imagen_url'],
-                'disponible': True
-            }
-        )
-        count += 1
+    try:
+        # Intentar cargar desde fixture JSON
+        if os.path.exists(fixture_path):
+            with open(fixture_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            categorias_count = 0
+            productos_count = 0
+            
+            # Procesar categorías primero
+            for item in data:
+                if item['model'] == 'gestion.categoria':
+                    Categoria.objects.update_or_create(
+                        pk=item['pk'],
+                        defaults=item['fields']
+                    )
+                    categorias_count += 1
+            
+            # Luego procesar productos
+            for item in data:
+                if item['model'] == 'gestion.producto':
+                    fields = item['fields'].copy()
+                    categoria_id = fields.pop('categoria')
+                    fields['categoria'] = Categoria.objects.get(pk=categoria_id)
+                    if fields.get('proveedor') is None:
+                        fields['proveedor'] = None
+                    
+                    Producto.objects.update_or_create(
+                        pk=item['pk'],
+                        defaults=fields
+                    )
+                    productos_count += 1
+            
+            messages.success(request, f'✅ Cargados desde JSON: {categorias_count} categorías y {productos_count} productos')
+        else:
+            # Si no existe el JSON, crear datos por defecto
+            cat_gpu, _ = Categoria.objects.get_or_create(nombre='Tarjetas Gráficas', defaults={'descripcion': 'GPUs de alto rendimiento'})
+            cat_cpu, _ = Categoria.objects.get_or_create(nombre='Procesadores', defaults={'descripcion': 'CPUs Intel y AMD'})
+            cat_ram, _ = Categoria.objects.get_or_create(nombre='Memoria RAM', defaults={'descripcion': 'Módulos DDR4 y DDR5'})
+            cat_ssd, _ = Categoria.objects.get_or_create(nombre='Almacenamiento', defaults={'descripcion': 'SSD y HDD'})
+            cat_kit, _ = Categoria.objects.get_or_create(nombre='Kits', defaults={'descripcion': 'Combos de actualización'})
+            cat_pc, _ = Categoria.objects.get_or_create(nombre='PCs Armadas', defaults={'descripcion': 'Equipos listos para usar'})
+            
+            productos_hardware = [
+                {'nombre': 'NVIDIA RTX 4090 24GB', 'precio': 1599.99, 'stock': 5, 'categoria': cat_gpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400'},
+                {'nombre': 'NVIDIA RTX 4070 Ti 12GB', 'precio': 799.99, 'stock': 8, 'categoria': cat_gpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400'},
+                {'nombre': 'AMD Radeon RX 7900 XTX', 'precio': 999.99, 'stock': 3, 'categoria': cat_gpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400'},
+                {'nombre': 'Intel Core i9-14900K', 'precio': 589.99, 'stock': 10, 'categoria': cat_cpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1555618568-9b1686616012?w=400'},
+                {'nombre': 'Intel Core i7-14700K', 'precio': 409.99, 'stock': 12, 'categoria': cat_cpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1555618568-9b1686616012?w=400'},
+                {'nombre': 'AMD Ryzen 9 7950X3D', 'precio': 699.99, 'stock': 4, 'categoria': cat_cpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1555618568-9b1686616012?w=400'},
+                {'nombre': 'AMD Ryzen 7 7800X3D', 'precio': 449.99, 'stock': 7, 'categoria': cat_cpu, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1555618568-9b1686616012?w=400'},
+                {'nombre': 'Corsair Vengeance DDR5 32GB', 'precio': 149.99, 'stock': 20, 'categoria': cat_ram, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1562976540-1502c2145186?w=400'},
+                {'nombre': 'G.Skill Trident Z5 64GB DDR5', 'precio': 299.99, 'stock': 6, 'categoria': cat_ram, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1562976540-1502c2145186?w=400'},
+                {'nombre': 'Samsung 990 Pro 2TB NVMe', 'precio': 179.99, 'stock': 15, 'categoria': cat_ssd, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400'},
+                {'nombre': 'WD Black SN850X 1TB', 'precio': 89.99, 'stock': 25, 'categoria': cat_ssd, 'tipo': 'componente', 'imagen_url': 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400'},
+                {'nombre': 'Kit Gamer AMD Ryzen 7 + B650', 'precio': 699.99, 'stock': 3, 'categoria': cat_kit, 'tipo': 'kit', 'imagen_url': 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400'},
+                {'nombre': 'Kit Intel i5 + Z790 + 32GB', 'precio': 849.99, 'stock': 0, 'categoria': cat_kit, 'tipo': 'kit', 'imagen_url': 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400'},
+                {'nombre': 'PC Gamer BitForge TITAN', 'precio': 2499.99, 'stock': 2, 'categoria': cat_pc, 'tipo': 'pc_armada', 'imagen_url': 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400'},
+                {'nombre': 'PC Gamer BitForge PHOENIX', 'precio': 1799.99, 'stock': 4, 'categoria': cat_pc, 'tipo': 'pc_armada', 'imagen_url': 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400'},
+                {'nombre': 'PC Workstation BitForge PRO', 'precio': 3299.99, 'stock': 1, 'categoria': cat_pc, 'tipo': 'pc_armada', 'imagen_url': 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400'},
+            ]
+            
+            count = 0
+            for p in productos_hardware:
+                Producto.objects.update_or_create(
+                    nombre=p['nombre'],
+                    defaults={
+                        'descripcion': f"Hardware de alto rendimiento - {p['categoria'].nombre}",
+                        'precio': p['precio'],
+                        'stock': p['stock'],
+                        'categoria': p['categoria'],
+                        'tipo': p['tipo'],
+                        'imagen_url': p['imagen_url'],
+                        'disponible': True
+                    }
+                )
+                count += 1
+            
+            messages.success(request, f'✅ {count} productos de hardware cargados correctamente')
+    except Exception as e:
+        messages.error(request, f'Error al cargar productos: {str(e)}')
     
-    messages.success(request, f'✅ {count} productos de hardware cargados correctamente')
-    return redirect('home')
+    return redirect('panel_admin')
+
 
 # Vista para limpiar productos basura
 @staff_member_required
 def limpiar_productos(request):
-    # Eliminar productos de la categoría "Importados" (los de la API)
-    try:
-        cat_importados = Categoria.objects.get(nombre='Importados')
-        count = Producto.objects.filter(categoria=cat_importados).count()
-        Producto.objects.filter(categoria=cat_importados).delete()
-        cat_importados.delete()
-        messages.success(request, f'🗑️ {count} productos importados eliminados')
-    except:
-        messages.info(request, 'No hay productos importados para eliminar')
+    # Categorías permitidas (Hardware real)
+    categorias_permitidas = [
+        'Tarjetas Gráficas', 'Procesadores', 'Memoria RAM', 
+        'Almacenamiento', 'Kits', 'PCs Armadas'
+    ]
     
-    return redirect('home')
+    # Eliminar productos que no sean de estas categorías
+    try:
+        # Borrar productos de categorías no permitidas
+        productos_basura = Producto.objects.exclude(categoria__nombre__in=categorias_permitidas)
+        count = productos_basura.count()
+        productos_basura.delete()
+        
+        # Eliminar categorías vacías o basura
+        Categoria.objects.exclude(nombre__in=categorias_permitidas).delete()
+        
+        messages.success(request, f'🗑️ {count} productos incorrectos eliminados. Base de datos limpia.')
+    except Exception as e:
+        messages.error(request, f'Error al limpiar: {str(e)}')
+    
+    return redirect('panel_admin')
 
 
 # ============================================
@@ -793,51 +881,6 @@ def limpiar_comparar(request):
     messages.success(request, 'Comparación limpiada')
     return redirect('catalogo')
 
-
-# Vista de Ofertas
-def ofertas(request):
-    # Productos con stock bajo (últimas unidades) = oferta
-    productos = Producto.objects.filter(disponible=True, stock__gt=0, stock__lte=5)
-    return render(request, 'ofertas.html', {'productos': productos})
-
-
-# Vista de FAQ
-def faq(request):
-    return render(request, 'faq.html')
-
-
-# Vista de Contacto
-def contacto(request):
-    if request.method == 'POST':
-        messages.success(request, '✅ Mensaje enviado correctamente. Te responderemos pronto.')
-        return redirect('contacto')
-    return render(request, 'contacto.html')
-
-
-# Vista de Sobre Nosotros
-def sobre_nosotros(request):
-    return render(request, 'sobre_nosotros.html')
-
-
-# Vista de Búsqueda Avanzada (AJAX)
-def busqueda_ajax(request):
-    query = request.GET.get('q', '')
-    if len(query) < 2:
-        return JsonResponse({'productos': []})
-    
-    productos = Producto.objects.filter(
-        Q(nombre__icontains=query) | Q(descripcion__icontains=query),
-        disponible=True
-    )[:5]
-    
-    data = [{
-        'id': p.id,
-        'nombre': p.nombre,
-        'precio': str(p.precio),
-        'imagen': p.imagen_url or ''
-    } for p in productos]
-    
-    return JsonResponse({'productos': data})
 
 
 # ============================================

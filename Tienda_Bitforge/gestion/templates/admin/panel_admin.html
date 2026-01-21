@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -371,62 +371,81 @@
                                 Solicitudes
                             </a>
                         </div>
-                        <div class="col-6">
-                            <a href="{% url 'cargar_productos' %}" class="quick-action">
-                                <i class="bi bi-database-add text-primary"></i>
-                                Demo Data
+
+                        <!-- MANTENIMIENTO BD -->
+                        <div class="col-12 mt-2">
+                            <h6 class="text-secondary small border-bottom border-secondary pb-1">Mantenimiento BD</h6>
+                        </div>
+
+                        <div class="col-4">
+                            <a href="{% url 'limpiar_productos' %}" class="quick-action text-danger"
+                                onclick="return confirm('¿Seguro quieres borrar productos NO HARDWARE?');">
+                                <i class="bi bi-trash"></i>
+                                Limpiar
                             </a>
                         </div>
-                        <div class="col-6">
+                        <div class="col-4">
+                            <a href="{% url 'cargar_productos' %}" class="quick-action text-primary">
+                                <i class="bi bi-database-add"></i>
+                                Cargar
+                            </a>
+                        </div>
+                        <div class="col-4">
+                            <a href="{% url 'importar_precios' %}" class="quick-action text-success">
+                                <i class="bi bi-arrow-repeat"></i>
+                                Sync
+                            </a>
+                        </div>
+
+                        <div class="col-12 mt-2">
                             <a href="{% url 'catalogo' %}" class="quick-action">
-                                <i class="bi bi-eye text-secondary"></i>
-                                Ver Tienda
+                                <i class="bi bi-eye text-light"></i>
+                                Ir a Tienda
                             </a>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        <script>
-            // Sales Chart
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            const ventasMes = {{ ventas_mes|default: 0 }};
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                    datasets: [{
-                        label: 'Ventas $',
-                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ventasMes],
-                        borderColor: '#00ff88',
-                        backgroundColor: 'rgba(0, 255, 136, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                // Sales Chart
+                const ctx = document.getElementById('salesChart').getContext('2d');
+                const ventasMes = {{ ventas_mes|default:0 }};
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                        datasets: [{
+                            label: 'Ventas $',
+                            data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ventasMes],
+                            borderColor: '#00ff88',
+                            backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255,255,255,0.1)' },
-                            ticks: { color: '#aaa' }
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
                         },
-                        x: {
-                            grid: { color: 'rgba(255,255,255,0.1)' },
-                            ticks: { color: '#aaa' }
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#aaa' }
+                            },
+                            x: {
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#aaa' }
+                            }
                         }
                     }
-                }
-            });
-        </script>
+                });
+            </script>
 </body>
 
 </html>

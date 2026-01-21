@@ -1,0 +1,296 @@
+[
+    {
+        "model": "gestion.categoria",
+        "pk": 1,
+        "fields": {
+            "nombre": "Tarjetas Gráficas",
+            "descripcion": "GPUs de alto rendimiento para gaming y trabajo profesional",
+            "icono": "bi-gpu-card"
+        }
+    },
+    {
+        "model": "gestion.categoria",
+        "pk": 2,
+        "fields": {
+            "nombre": "Procesadores",
+            "descripcion": "CPUs Intel y AMD de última generación",
+            "icono": "bi-cpu"
+        }
+    },
+    {
+        "model": "gestion.categoria",
+        "pk": 3,
+        "fields": {
+            "nombre": "Memoria RAM",
+            "descripcion": "Módulos DDR4 y DDR5",
+            "icono": "bi-memory"
+        }
+    },
+    {
+        "model": "gestion.categoria",
+        "pk": 4,
+        "fields": {
+            "nombre": "Almacenamiento",
+            "descripcion": "SSD NVMe y HDD de alta capacidad",
+            "icono": "bi-device-hdd"
+        }
+    },
+    {
+        "model": "gestion.categoria",
+        "pk": 5,
+        "fields": {
+            "nombre": "Kits",
+            "descripcion": "Combos de actualización",
+            "icono": "bi-box-seam"
+        }
+    },
+    {
+        "model": "gestion.categoria",
+        "pk": 6,
+        "fields": {
+            "nombre": "PCs Armadas",
+            "descripcion": "Equipos completos listos para usar",
+            "icono": "bi-pc-display"
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 1,
+        "fields": {
+            "nombre": "NVIDIA RTX 4090 24GB",
+            "descripcion": "La GPU más potente para gaming y creación de contenido. 24GB GDDR6X, Ray Tracing, DLSS 3.0",
+            "precio": "1599.99",
+            "stock": 5,
+            "imagen_url": "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400",
+            "categoria": 1,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 2,
+        "fields": {
+            "nombre": "NVIDIA RTX 4070 Ti 12GB",
+            "descripcion": "Excelente rendimiento precio/calidad. 12GB GDDR6X, ideal para 1440p gaming",
+            "precio": "799.99",
+            "stock": 8,
+            "imagen_url": "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400",
+            "categoria": 1,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 3,
+        "fields": {
+            "nombre": "AMD Radeon RX 7900 XTX",
+            "descripcion": "Top tier de AMD. 24GB GDDR6, tecnología RDNA 3",
+            "precio": "999.99",
+            "stock": 3,
+            "imagen_url": "https://images.unsplash.com/photo-1591488320449-011701bb6704?w=400",
+            "categoria": 1,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 4,
+        "fields": {
+            "nombre": "Intel Core i9-14900K",
+            "descripcion": "El procesador más rápido para gaming. 24 núcleos, hasta 6.0GHz",
+            "precio": "589.99",
+            "stock": 10,
+            "imagen_url": "https://images.unsplash.com/photo-1555618568-9b1686616012?w=400",
+            "categoria": 2,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 5,
+        "fields": {
+            "nombre": "Intel Core i7-14700K",
+            "descripcion": "20 núcleos de alto rendimiento. Perfecto para gaming y productividad",
+            "precio": "409.99",
+            "stock": 12,
+            "imagen_url": "https://images.unsplash.com/photo-1555618568-9b1686616012?w=400",
+            "categoria": 2,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 6,
+        "fields": {
+            "nombre": "AMD Ryzen 9 7950X3D",
+            "descripcion": "El mejor CPU para gaming con 3D V-Cache. 16 núcleos, 128MB L3 cache",
+            "precio": "699.99",
+            "stock": 4,
+            "imagen_url": "https://images.unsplash.com/photo-1555618568-9b1686616012?w=400",
+            "categoria": 2,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 7,
+        "fields": {
+            "nombre": "AMD Ryzen 7 7800X3D",
+            "descripcion": "El rey del gaming. 8 núcleos con 3D V-Cache para máximo FPS",
+            "precio": "449.99",
+            "stock": 7,
+            "imagen_url": "https://images.unsplash.com/photo-1555618568-9b1686616012?w=400",
+            "categoria": 2,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 8,
+        "fields": {
+            "nombre": "Corsair Vengeance DDR5 32GB",
+            "descripcion": "Kit 2x16GB DDR5-6000. Optimizado para Intel y AMD",
+            "precio": "149.99",
+            "stock": 20,
+            "imagen_url": "https://images.unsplash.com/photo-1562976540-1502c2145186?w=400",
+            "categoria": 3,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 9,
+        "fields": {
+            "nombre": "G.Skill Trident Z5 64GB DDR5",
+            "descripcion": "Kit 2x32GB DDR5-6400 RGB. Premium para workstations",
+            "precio": "299.99",
+            "stock": 6,
+            "imagen_url": "https://images.unsplash.com/photo-1562976540-1502c2145186?w=400",
+            "categoria": 3,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 10,
+        "fields": {
+            "nombre": "Samsung 990 Pro 2TB NVMe",
+            "descripcion": "SSD PCIe 4.0, hasta 7450MB/s lectura. Ideal para gaming y edición",
+            "precio": "179.99",
+            "stock": 15,
+            "imagen_url": "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400",
+            "categoria": 4,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 11,
+        "fields": {
+            "nombre": "WD Black SN850X 1TB",
+            "descripcion": "SSD NVMe de alto rendimiento para gaming. 7300MB/s lectura",
+            "precio": "89.99",
+            "stock": 25,
+            "imagen_url": "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400",
+            "categoria": 4,
+            "proveedor": null,
+            "tipo": "componente",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 12,
+        "fields": {
+            "nombre": "Kit Gamer AMD Ryzen 7 + B650",
+            "descripcion": "Ryzen 7 7800X3D + Motherboard ASUS B650 + 32GB DDR5",
+            "precio": "699.99",
+            "stock": 3,
+            "imagen_url": "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400",
+            "categoria": 5,
+            "proveedor": null,
+            "tipo": "kit",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 13,
+        "fields": {
+            "nombre": "Kit Intel i5 + Z790 + 32GB",
+            "descripcion": "Intel i5-14600K + MSI Z790 + 32GB Corsair DDR5",
+            "precio": "849.99",
+            "stock": 0,
+            "imagen_url": "https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=400",
+            "categoria": 5,
+            "proveedor": null,
+            "tipo": "kit",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 14,
+        "fields": {
+            "nombre": "PC Gamer BitForge TITAN",
+            "descripcion": "RTX 4090 + i9-14900K + 64GB DDR5 + 2TB NVMe. El máximo poder",
+            "precio": "2499.99",
+            "stock": 2,
+            "imagen_url": "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400",
+            "categoria": 6,
+            "proveedor": null,
+            "tipo": "pc_armada",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 15,
+        "fields": {
+            "nombre": "PC Gamer BitForge PHOENIX",
+            "descripcion": "RTX 4070 Ti + Ryzen 7 7800X3D + 32GB DDR5 + 1TB NVMe",
+            "precio": "1799.99",
+            "stock": 4,
+            "imagen_url": "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400",
+            "categoria": 6,
+            "proveedor": null,
+            "tipo": "pc_armada",
+            "disponible": true
+        }
+    },
+    {
+        "model": "gestion.producto",
+        "pk": 16,
+        "fields": {
+            "nombre": "PC Workstation BitForge PRO",
+            "descripcion": "Para profesionales: RTX 4090 + Ryzen 9 7950X + 128GB ECC",
+            "precio": "3299.99",
+            "stock": 1,
+            "imagen_url": "https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=400",
+            "categoria": 6,
+            "proveedor": null,
+            "tipo": "pc_armada",
+            "disponible": true
+        }
+    }
+]

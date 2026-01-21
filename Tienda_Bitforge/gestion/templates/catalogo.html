@@ -296,8 +296,7 @@
                             <select name="categoria" class="form-select">
                                 <option value="">Todas las categorías</option>
                                 {% for cat in categorias %}
-                                <option value="{{ cat.id }}" {% if categoria_actual==cat.id|stringformat:"s"
-                                    %}selected{% endif %}>
+                                <option value="{{ cat.id }}" {% if categoria_actual == cat.id|stringformat:"s" %}selected{% endif %}>
                                     {{ cat.nombre }}
                                 </option>
                                 {% endfor %}
@@ -320,21 +319,16 @@
                         <div class="mb-3">
                             <label class="form-label small text-muted">Ordenar por</label>
                             <select name="orden" class="form-select">
-                                <option value="" {% if not request.GET.orden %}selected{% endif %}>Más recientes
-                                </option>
-                                <option value="precio_asc" {% if request.GET.orden=='precio_asc' %}selected{% endif %}>
-                                    Precio: Menor a Mayor</option>
-                                <option value="precio_desc" {% if request.GET.orden=='precio_desc' %}selected{% endif
-                                    %}>Precio: Mayor a Menor</option>
-                                <option value="nombre" {% if request.GET.orden=='nombre' %}selected{% endif %}>Nombre
-                                    A-Z</option>
+                                <option value="" {% if not request.GET.orden %}selected{% endif %}>Más recientes</option>
+                                <option value="precio_asc" {% if request.GET.orden == 'precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
+                                <option value="precio_desc" {% if request.GET.orden == 'precio_desc' %}selected{% endif %}>Precio: Mayor a Menor</option>
+                                <option value="nombre" {% if request.GET.orden == 'nombre' %}selected{% endif %}>Nombre A-Z</option>
                             </select>
                         </div>
 
                         <!-- Solo con stock -->
                         <div class="mb-3 form-check">
-                            <input type="checkbox" name="solo_stock" class="form-check-input" id="soloStock" {% if
-                                request.GET.solo_stock %}checked{% endif %}>
+                            <input type="checkbox" name="solo_stock" class="form-check-input" id="soloStock" {% if request.GET.solo_stock %}checked{% endif %}>
                             <label class="form-check-label small" for="soloStock">Solo productos en stock</label>
                         </div>
 

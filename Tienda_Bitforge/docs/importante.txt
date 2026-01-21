@@ -1,0 +1,25 @@
+-------------> SUPERUSUARIO <-------------
+
+username = 'joelp'
+password = 'admin1470'
+
+-------------> USUARIOS CLIENTES <-------------
+
+username = 'joelp'
+password = 'admin1470'
+
+-------------> USUARIO SUPERVISOR <---------------
+
+username = 'joelp'
+password = 'admin1470'
+
+-------------> USUARIO BODEGUERO <-------------
+
+username = 'joelp'
+password = 'admin1470'
+
+-------------> USUARIO ADMIN <-------------
+
+username = 'joelp'
+password = 'admin1470'
+
