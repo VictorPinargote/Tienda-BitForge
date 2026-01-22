@@ -307,4 +307,41 @@ class ProductoComparado(models.Model):
     
     def __str__(self):
         return f"{self.usuario.username} compara {self.producto.nombre}"
+
+
+# Modelo de Devolución
+class Devolucion(models.Model):
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('aprobada', 'Aprobada'),
+        ('rechazada', 'Rechazada'),
+        ('completada', 'Completada'),
+    ]
     
+    MOTIVO_CHOICES = [
+        ('defectuoso', 'Producto Defectuoso'),
+        ('incorrecto', 'Producto Incorrecto'),
+        ('danado', 'Producto Dañado'),
+        ('no_satisface', 'No Satisface Expectativas'),
+        ('otro', 'Otro'),
+    ]
+    
+    pedido = models.ForeignKey('Pedido', on_delete=models.CASCADE, related_name='devoluciones')
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    motivo = models.CharField(max_length=20, choices=MOTIVO_CHOICES)
+    descripcion = models.TextField(help_text="Describe el problema")
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    
+    # Admin response
+    respuesta_admin = models.TextField(blank=True, null=True)
+    monto_reembolso = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    fecha_resolucion = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-fecha_solicitud']
+        verbose_name_plural = "Devoluciones"
+    
+    def __str__(self):
+        return f"Devolución #{self.id} - Pedido #{self.pedido.numero_pedido}"

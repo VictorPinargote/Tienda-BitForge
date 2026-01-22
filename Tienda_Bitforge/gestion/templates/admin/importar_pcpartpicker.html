@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Productos - BitForge Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --neon-cyan: #00f5ff;
+            --neon-magenta: #ff00ff;
+            --neon-green: #39ff14;
+            --dark-bg: #0a0a0f;
+            --card-bg: rgba(20, 20, 35, 0.9);
+        }
+
+        body {
+            background: var(--dark-bg);
+            font-family: 'Roboto', sans-serif;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .neon-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .card-dark {
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.1);
+        }
+
+        .btn-neon {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+            border: none;
+            color: #000;
+            font-weight: bold;
+            padding: 12px 25px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-neon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 245, 255, 0.5);
+            color: #000;
+        }
+
+        .form-control,
+        .form-select {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            color: #fff;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: rgba(0, 0, 0, 0.7);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+            color: #fff;
+        }
+
+        .form-select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .category-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .category-card:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .category-card.selected {
+            border-color: var(--neon-magenta);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
+        }
+
+        .category-card i {
+            font-size: 2rem;
+            color: var(--neon-cyan);
+            margin-bottom: 10px;
+        }
+
+        .info-box {
+            background: rgba(0, 245, 255, 0.1);
+            border-left: 4px solid var(--neon-cyan);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-5">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <a href="{% url 'panel_admin' %}" class="btn btn-outline-light mb-3">
+                <i class="bi bi-arrow-left"></i> Volver al Panel
+            </a>
+            <h1 class="neon-title display-4">
+                <i class="bi bi-cloud-download"></i> Importar Productos
+            </h1>
+            <p class="text-muted">Importa productos de hardware con imágenes desde APIs (DummyJSON + Pixabay)</p>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <h5><i class="bi bi-info-circle text-info"></i> Información</h5>
+            <ul class="mb-0">
+                <li><strong>Hardware PC:</strong> Datos de productos reales + imágenes de Pixabay</li>
+                <li><strong>Laptops:</strong> Productos reales de DummyJSON con imágenes incluidas</li>
+                <li>Los productos se guardan en la base de datos</li>
+            </ul>
+        </div>
+
+        <!-- Form Card -->
+        <div class="card card-dark p-4">
+            <form method="POST" id="importForm">
+                {% csrf_token %}
+
+                <h4 class="mb-4"><i class="bi bi-folder2-open text-info"></i> Selecciona una Categoría</h4>
+
+                <!-- Category Grid -->
+                <div class="row g-3 mb-4">
+                    {% for key, value in categorias.items %}
+                    <div class="col-md-4 col-6">
+                        <div class="category-card" data-category="{{ key }}"
+                            onclick="selectCategory('{{ key }}', this)">
+                            {% if key == 'cpu' %}
+                            <i class="bi bi-cpu"></i>
+                            {% elif key == 'gpu' %}
+                            <i class="bi bi-gpu-card"></i>
+                            {% elif key == 'ram' %}
+                            <i class="bi bi-memory"></i>
+                            {% elif key == 'ssd' %}
+                            <i class="bi bi-device-hdd"></i>
+                            {% elif key == 'motherboard' %}
+                            <i class="bi bi-motherboard"></i>
+                            {% elif key == 'laptops' %}
+                            <i class="bi bi-laptop"></i>
+                            {% else %}
+                            <i class="bi bi-box"></i>
+                            {% endif %}
+                            <div class="fw-bold">{{ value }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <input type="hidden" name="categoria" id="categoriaInput" value="cpu">
+
+                <!-- Quantity Selector -->
+                <div class="row align-items-end mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-hash text-info"></i> Cantidad de productos
+                        </label>
+                        <select name="cantidad" class="form-select">
+                            <option value="3">3 productos</option>
+                            <option value="5" selected>5 productos</option>
+                            <option value="6">6 productos (máximo hardware)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="submit" class="btn btn-neon btn-lg" id="importBtn">
+                            <i class="bi bi-cloud-download"></i> Importar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quick Import Buttons -->
+        <div class="mt-4">
+            <h5 class="text-muted mb-3"><i class="bi bi-lightning"></i> Importación Rápida</h5>
+            <div class="d-flex flex-wrap gap-2">
+                <form method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="categoria" value="cpu">
+                    <input type="hidden" name="cantidad" value="6">
+                    <button type="submit" class="btn btn-outline-info">
+                        <i class="bi bi-cpu"></i> CPUs (6)
+                    </button>
+                </form>
+                <form method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="categoria" value="gpu">
+                    <input type="hidden" name="cantidad" value="6">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-gpu-card"></i> GPUs (6)
+                    </button>
+                </form>
+                <form method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="categoria" value="ram">
+                    <input type="hidden" name="cantidad" value="5">
+                    <button type="submit" class="btn btn-outline-success">
+                        <i class="bi bi-memory"></i> RAM (5)
+                    </button>
+                </form>
+                <form method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="categoria" value="ssd">
+                    <input type="hidden" name="cantidad" value="5">
+                    <button type="submit" class="btn btn-outline-warning">
+                        <i class="bi bi-device-hdd"></i> SSDs (5)
+                    </button>
+                </form>
+                <form method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="categoria" value="laptops">
+                    <input type="hidden" name="cantidad" value="5">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-laptop"></i> Laptops (5)
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectCategory(category, element) {
+            document.querySelectorAll('.category-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            document.getElementById('categoriaInput').value = category;
+        }
+
+        document.querySelector('.category-card').classList.add('selected');
+
+        document.getElementById('importForm').addEventListener('submit', function () {
+            const btn = document.getElementById('importBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Importando...';
+        });
+    </script>
+</body>
+
+</html>

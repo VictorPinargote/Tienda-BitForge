@@ -586,15 +586,17 @@
                     </li>
                     {% endif %}
 
-                    {# CARRITO SOLO PARA CLIENTES LOGUEADOS (no admin) #}
-                    {% if user.is_authenticated and not user.is_staff %}
+                    {# CARRITO PARA TODOS (no admin) #}
+                    {% if not user.is_staff %}
                     <li class="nav-item ms-3">
                         <a href="{% url 'ver_carrito' %}" class="btn btn-light rounded-circle position-relative">
                             <i class="bi bi-cart-fill text-dark"></i>
+                            {% if user.is_authenticated %}
                             <span
                                 class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                 {{ user.carritoitem_set.count }}
                             </span>
+                            {% endif %}
                         </a>
                     </li>
                     {% endif %}
@@ -658,96 +660,96 @@
                                 <i class="bi bi-3-circle-fill fs-3 text-warning me-2"></i> <span>Bodega Recibe</span>
                             </div>
                         </div>
-
-                        <a href="{% url 'mis_solicitudes' %}" class="btn btn-warning mt-4 fw-bold">Ver Mis
-                            Solicitudes</a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            {# PARA USUARIOS NO LOGUEADOS #}
-            {% if not user.is_authenticated %}
-            <div class="row mb-5">
-                <div class="col-12">
-                    <div class="p-4 rounded-3 text-white text-center" style="background: rgba(0,0,0,0.6);">
-                        <h3><i class="bi bi-person-plus text-neon"></i> ¿Nuevo en BitForge?</h3>
-                        <p>Regístrate para acceder al carrito, solicitudes y más.</p>
-                        <a href="{% url 'registro' %}" class="btn btn-neon">Crear Cuenta</a>
-                        <a href="{% url 'login' %}" class="btn btn-outline-light ms-2">Ya tengo cuenta</a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <h2 class="section-title text-white">Stock Disponible</h2>
-
-            <div class="row g-4">
-                {% for p in productos %}
-                <div class="col-md-4 col-lg-3">
-                    <div class="glass-card h-100">
-                        <div style="height: 200px; overflow: hidden; position: relative;">
-                            <a href="{% url 'detalle_producto' p.id %}">
-                                <img src="{{ p.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=300' }}"
-                                    class="w-100 h-100" style="object-fit: contain; background: #fff;"
-                                    alt="{{ p.nombre }}">
+                        <div class="mt-4">
+                            <a href="{% url 'crear_solicitud_generica' %}" class="btn btn-neon fw-bold me-3">
+                                <i class="bi bi-plus-circle"></i> Nueva Solicitud
                             </a>
-                            <span
-                                class="position-absolute top-0 end-0 bg-primary text-white px-2 py-1 m-2 rounded small fw-bold">
-                                {{ p.get_tipo_display }}
-                            </span>
-                        </div>
-
-                        <div class="p-3">
-                            <h5 class="text-white mb-1">{{ p.nombre|truncatewords:5 }}</h5>
-
-                            <div class="d-flex justify-content-between align-items-center my-3">
-                                <span class="fs-4 text-neon fw-bold">${{ p.precio }}</span>
-                                {% if p.stock > 0 %}
-                                <span class="badge bg-success bg-opacity-25 text-success border border-success">{{
-                                    p.get_estado_stock }}</span>
-                                {% else %}
-                                <span
-                                    class="badge bg-danger bg-opacity-25 text-danger border border-danger">Agotado</span>
-                                {% endif %}
-                            </div>
-
-                            {# BOTONES SEGÚN USUARIO Y STOCK #}
-                            {% if user.is_authenticated and not user.is_staff %}
-                            {% if p.stock > 0 %}
-                            <a href="{% url 'agregar_carrito' p.id %}" class="btn btn-light w-100 fw-bold">
-                                <i class="bi bi-cart-plus"></i> Agregar
+                            <a href="{% url 'mis_solicitudes' %}" class="btn btn-warning fw-bold">
+                                <i class="bi bi-list-check"></i> Ver Mis Solicitudes
                             </a>
-                            {% else %}
-                            <a href="{% url 'crear_solicitud' p.id %}" class="btn btn-outline-warning w-100">
-                                <i class="bi bi-exclamation-circle"></i> Solicitar a Proveedor
-                            </a>
-                            {% endif %}
-                            {% elif not user.is_authenticated %}
-                            <a href="{% url 'login' %}" class="btn btn-outline-light w-100">
-                                <i class="bi bi-person"></i> Inicia sesión
-                            </a>
-                            {% else %}
-                            {# ADMIN/STAFF solo ve el detalle #}
-                            <a href="{% url 'detalle_producto' p.id %}" class="btn btn-outline-info w-100">
-                                <i class="bi bi-eye"></i> Ver Detalle
-                            </a>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
-                {% empty %}
-                <div class="col-12 text-center py-5">
-                    <h3 class="text-muted">No hay productos disponibles.</h3>
-                    {% if user.is_staff %}
-                    <p>Usa el panel de admin para cargar productos.</p>
-                    <a href="{% url 'panel_admin' %}" class="btn btn-neon">Ir al Panel</a>
-                    {% endif %}
-                </div>
-                {% endfor %}
             </div>
-
         </div>
+        {% endif %}
+
+        {# PARA USUARIOS NO LOGUEADOS #}
+        {% if not user.is_authenticated %}
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="p-4 rounded-3 text-white text-center" style="background: rgba(0,0,0,0.6);">
+                    <h3><i class="bi bi-person-plus text-neon"></i> ¿Nuevo en BitForge?</h3>
+                    <p>Regístrate para acceder al carrito, solicitudes y más.</p>
+                    <a href="{% url 'registro' %}" class="btn btn-neon">Crear Cuenta</a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light ms-2">Ya tengo cuenta</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <h2 class="section-title text-white">Stock Disponible</h2>
+
+        <div class="row g-4">
+            {% for p in productos %}
+            <div class="col-md-4 col-lg-3">
+                <div class="glass-card h-100">
+                    <div style="height: 200px; overflow: hidden; position: relative;">
+                        <a href="{% url 'detalle_producto' p.id %}">
+                            <img src="{{ p.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=300' }}"
+                                class="w-100 h-100" style="object-fit: contain; background: #fff;" alt="{{ p.nombre }}">
+                        </a>
+                        <span
+                            class="position-absolute top-0 end-0 bg-primary text-white px-2 py-1 m-2 rounded small fw-bold">
+                            {{ p.get_tipo_display }}
+                        </span>
+                    </div>
+
+                    <div class="p-3">
+                        <h5 class="text-white mb-1">{{ p.nombre|truncatewords:5 }}</h5>
+
+                        <div class="d-flex justify-content-between align-items-center my-3">
+                            <span class="fs-4 text-neon fw-bold">${{ p.precio }}</span>
+                            {% if p.stock > 0 %}
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success">{{ p.stock
+                                }} en stock</span>
+                            {% else %}
+                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger">Agotado</span>
+                            {% endif %}
+                        </div>
+
+                        {# BOTONES - TODOS PUEDEN AGREGAR AL CARRITO #}
+                        {% if not user.is_staff %}
+                        {% if p.stock > 0 %}
+                        <a href="{% url 'agregar_carrito' p.id %}" class="btn btn-light w-100 fw-bold">
+                            <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                        </a>
+                        {% else %}
+                        <span class="btn btn-secondary w-100 disabled">
+                            <i class="bi bi-x-circle"></i> Agotado
+                        </span>
+                        {% endif %}
+                        {% else %}
+                        {# ADMIN/STAFF solo ve el detalle #}
+                        <a href="{% url 'detalle_producto' p.id %}" class="btn btn-outline-info w-100">
+                            <i class="bi bi-eye"></i> Ver Detalle
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <h3 class="text-muted">No hay productos disponibles.</h3>
+                {% if user.is_staff %}
+                <p>Usa el panel de admin para cargar productos.</p>
+                <a href="{% url 'panel_admin' %}" class="btn btn-neon">Ir al Panel</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
     </div>
 
     <!-- Testimonials Section -->

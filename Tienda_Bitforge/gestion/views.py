@@ -8,12 +8,16 @@ from django.utils import timezone
 from .models import (
     Producto, CarritoItem, Solicitud, Categoria, 
     Pedido, PedidoItem, Resena, ListaDeseos, 
-    Cupon, PerfilUsuario, SuscripcionNewsletter, ProductoComparado
+    Cupon, PerfilUsuario, SuscripcionNewsletter, ProductoComparado,
+    Devolucion
 )
 from django.contrib.admin.views.decorators import staff_member_required
 import requests
 import random
 from decimal import Decimal
+
+# Servicio de APIs de Hardware
+from .services import hardware_api_service
 
 # Vista principal - Página de inicio
 def home(request):
@@ -127,11 +131,35 @@ def registro(request):
 
 
 # Vista del carrito
-@login_required
+# Vista del carrito (AHORA SIN LOGIN REQUERIDO - usa sesión)
 def ver_carrito(request):
-    items = CarritoItem.objects.filter(usuario=request.user).select_related('producto')
-    subtotal = sum(item.subtotal() for item in items)
-    total_items = sum(item.cantidad for item in items)
+    """Vista del carrito que funciona para usuarios autenticados y no autenticados"""
+    items = []
+    subtotal = Decimal('0')
+    total_items = 0
+    
+    if request.user.is_authenticated:
+        # Usuario autenticado - usar modelo CarritoItem
+        items = CarritoItem.objects.filter(usuario=request.user).select_related('producto')
+        subtotal = sum(item.subtotal() for item in items)
+        total_items = sum(item.cantidad for item in items)
+    else:
+        # Usuario no autenticado - usar sesión
+        carrito_sesion = request.session.get('carrito', {})
+        for producto_id, cantidad in carrito_sesion.items():
+            try:
+                producto = Producto.objects.get(id=producto_id)
+                item_data = {
+                    'id': producto_id,
+                    'producto': producto,
+                    'cantidad': cantidad,
+                    'subtotal': lambda p=producto, c=cantidad: p.precio * c
+                }
+                items.append(type('CarritoItemSesion', (), item_data)())
+                subtotal += producto.precio * cantidad
+                total_items += cantidad
+            except Producto.DoesNotExist:
+                pass
     
     # Verificar cupón en sesión
     descuento = Decimal('0')
@@ -150,8 +178,8 @@ def ver_carrito(request):
     
     total_final = subtotal - descuento
     
-    # Productos sugeridos (excluir los que ya están en carrito)
-    productos_en_carrito = [item.producto_id for item in items]
+    # Productos sugeridos
+    productos_en_carrito = [item.producto.id if hasattr(item, 'producto') else item.id for item in items]
     sugerencias = Producto.objects.filter(
         disponible=True, 
         stock__gt=0
@@ -164,55 +192,107 @@ def ver_carrito(request):
         'cupon': cupon,
         'descuento': descuento,
         'total_final': total_final,
-        'sugerencias': sugerencias
+        'sugerencias': sugerencias,
+        'requiere_login': not request.user.is_authenticated
     })
 
-# Vista de agregar al carrito (CON VALIDACIÓN DE STOCK)
-@login_required
+# Vista de agregar al carrito (SIN LOGIN REQUERIDO)
 def agregar_carrito(request, producto_id):
-    producto = Producto.objects.get(id=producto_id)
+    """Agregar producto al carrito - funciona con o sin login"""
+    try:
+        producto = Producto.objects.get(id=producto_id)
+    except Producto.DoesNotExist:
+        messages.error(request, 'Producto no encontrado')
+        return redirect('home')
     
     # Validar stock
     if producto.stock <= 0:
         messages.error(request, 'Este producto no tiene stock disponible')
         return redirect('home')
     
-    item, created = CarritoItem.objects.get_or_create(
-        usuario=request.user,
-        producto=producto,
-        defaults={'cantidad': 1}
-    )
-    
-    if not created:
-        if item.cantidad < producto.stock:
-            item.cantidad += 1
-            item.save()
+    if request.user.is_authenticated:
+        # Usuario autenticado - usar modelo CarritoItem
+        item, created = CarritoItem.objects.get_or_create(
+            usuario=request.user,
+            producto=producto,
+            defaults={'cantidad': 1}
+        )
+        
+        if not created:
+            if item.cantidad < producto.stock:
+                item.cantidad += 1
+                item.save()
+            else:
+                messages.warning(request, 'No hay suficiente stock')
+                return redirect('home')
+    else:
+        # Usuario no autenticado - usar sesión
+        carrito = request.session.get('carrito', {})
+        producto_id_str = str(producto_id)
+        
+        if producto_id_str in carrito:
+            if carrito[producto_id_str] < producto.stock:
+                carrito[producto_id_str] += 1
+            else:
+                messages.warning(request, 'No hay suficiente stock')
+                return redirect('home')
         else:
-            messages.warning(request, 'No hay suficiente stock')
-            return redirect('home')
+            carrito[producto_id_str] = 1
+        
+        request.session['carrito'] = carrito
+        request.session.modified = True
     
     messages.success(request, f'{producto.nombre} agregado al carrito')
     return redirect('home')
 
-# Vista de eliminar del carrito
-@login_required
+# Vista de eliminar del carrito (SIN LOGIN REQUERIDO)
 def eliminar_carrito(request, item_id):
-    item = CarritoItem.objects.get(id=item_id, usuario=request.user)
-    item.delete()
-    messages.success(request, 'Producto eliminado del carrito')
+    """Eliminar producto del carrito - funciona con o sin login"""
+    if request.user.is_authenticated:
+        try:
+            item = CarritoItem.objects.get(id=item_id, usuario=request.user)
+            item.delete()
+            messages.success(request, 'Producto eliminado del carrito')
+        except CarritoItem.DoesNotExist:
+            messages.error(request, 'Producto no encontrado en el carrito')
+    else:
+        # Usuario no autenticado - eliminar de sesión
+        carrito = request.session.get('carrito', {})
+        producto_id_str = str(item_id)
+        if producto_id_str in carrito:
+            del carrito[producto_id_str]
+            request.session['carrito'] = carrito
+            request.session.modified = True
+            messages.success(request, 'Producto eliminado del carrito')
     return redirect('ver_carrito')
 
-# Vista de actualizar cantidad
-@login_required
+# Vista de actualizar cantidad (SIN LOGIN REQUERIDO)
 def actualizar_cantidad(request, item_id):
+    """Actualizar cantidad de producto en carrito - funciona con o sin login"""
     if request.method == 'POST':
         cantidad = int(request.POST.get('cantidad', 1))
-        item = CarritoItem.objects.get(id=item_id, usuario=request.user)
-        if cantidad > 0:
-            item.cantidad = cantidad
-            item.save()
+        
+        if request.user.is_authenticated:
+            try:
+                item = CarritoItem.objects.get(id=item_id, usuario=request.user)
+                if cantidad > 0:
+                    item.cantidad = cantidad
+                    item.save()
+                else:
+                    item.delete()
+            except CarritoItem.DoesNotExist:
+                pass
         else:
-            item.delete()
+            # Usuario no autenticado - actualizar en sesión
+            carrito = request.session.get('carrito', {})
+            producto_id_str = str(item_id)
+            if producto_id_str in carrito:
+                if cantidad > 0:
+                    carrito[producto_id_str] = cantidad
+                else:
+                    del carrito[producto_id_str]
+                request.session['carrito'] = carrito
+                request.session.modified = True
     return redirect('ver_carrito')
 
 # Vista de finalizar compra (CHECKOUT)
@@ -240,6 +320,31 @@ def finalizar_compra(request):
     
     messages.success(request, '🎉 ¡Compra realizada con éxito! Tu pedido está en proceso.')
     return redirect('home')
+
+# Vista de crear solicitud genérica (NUEVA)
+@login_required
+def crear_solicitud_generica(request):
+    """Crea una solicitud genérica usando un producto placeholder."""
+    # Buscar o crear producto placeholder
+    # Aseguramos que exista al menos una categoría
+    categoria = Categoria.objects.first()
+    if not categoria:
+        messages.error(request, 'Error: No hay categorías definidas en el sistema')
+        return redirect('home')
+
+    producto_gen, created = Producto.objects.get_or_create(
+        nombre="Solicitud Personalizada",
+        defaults={
+            'descripcion': 'Producto genérico para solicitudes personalizadas',
+            'precio': Decimal('0.00'),
+            'stock': 0,
+            'disponible': False,
+            'categoria': categoria
+        }
+    )
+    
+    # Redirigir a la vista normal de crear solicitud con este ID
+    return redirect('crear_solicitud', producto_id=producto_gen.id)
 
 # Vista de crear solicitud
 @login_required
@@ -287,30 +392,94 @@ def marcar_completada(request, solicitud_id):
     messages.success(request, f'Solicitud #{solicitud.id} completada y stock actualizado')
     return redirect('solicitudes_admin')
 
-# Vista de importar precios (SOLO ACTUALIZA PRECIOS, NO CREA PRODUCTOS)
+# Vista de actualizar precios (simulación de mercado)
 @staff_member_required
 def importar_precios(request):
-    # Simulación de API de Precios Interna
-    # En lugar de usar una API externa que puede traer datos basura,
-    # simulamos fluctuaciones de mercado en tiempo real.
-    try:
-        productos = Producto.objects.all()
-        count = 0
-        
-        for prod in productos:
-            # Fluctuación aleatoria entre -5% y +5%
-            fluctuacion = Decimal(random.uniform(0.95, 1.05))
-            nuevo_precio = prod.precio * fluctuacion
-            prod.precio = round(nuevo_precio, 2)
-            prod.save()
-            count += 1
-            
-        messages.success(request, f'✅ Precios actualizados vía API BitForge Global. {count} productos sincronizados.')
-        
-    except Exception as e:
-        messages.error(request, f'Error en sincronización: {str(e)}')
-        
+    """Actualiza precios de productos con fluctuaciones de mercado realistas."""
+    productos = Producto.objects.filter(disponible=True)
+    count = 0
+    for prod in productos:
+        # Fluctuación aleatoria entre -5% y +5% (simula mercado real)
+        fluctuacion = Decimal(str(random.uniform(0.95, 1.05)))
+        nuevo_precio = prod.precio * fluctuacion
+        prod.precio = round(nuevo_precio, 2)
+        prod.save()
+        count += 1
+    messages.success(request, f'✅ Precios actualizados (fluctuación de mercado). {count} productos sincronizados.')
     return redirect('panel_admin')
+
+
+# Vista de importar productos desde APIs (DummyJSON + Pixabay)
+@staff_member_required
+def importar_pcpartpicker(request):
+    """Importa productos de hardware usando APIs reales (DummyJSON + Pixabay)"""
+    
+    # Categorías disponibles para importar
+    CATEGORIAS_DISPONIBLES = {
+        'cpu': 'Procesadores (Intel/AMD)',
+        'gpu': 'Tarjetas Gráficas (NVIDIA/AMD)', 
+        'ram': 'Memoria RAM (DDR5)',
+        'ssd': 'Almacenamiento (NVMe)',
+        'motherboard': 'Motherboards',
+        'laptops': 'Laptops (DummyJSON API)',
+    }
+    
+    if request.method == 'POST':
+        categoria = request.POST.get('categoria', 'cpu')
+        cantidad = int(request.POST.get('cantidad', 5))
+        
+        try:
+            # Usar el nuevo servicio de hardware API
+            creados, actualizados = hardware_api_service.importar_productos_api(
+                Producto, 
+                Categoria,
+                tipo=categoria,
+                limite=cantidad
+            )
+            
+            if creados > 0 or actualizados > 0:
+                messages.success(
+                    request, 
+                    f'✅ Importación completada: {creados} nuevos productos, {actualizados} actualizados. '
+                    f'Imágenes obtenidas de Pixabay/DummyJSON.'
+                )
+            else:
+                messages.warning(request, '⚠️ No se importaron productos. Intenta con otra categoría.')
+                
+        except Exception as e:
+            messages.error(request, f'❌ Error al importar: {str(e)}')
+        
+        return redirect('panel_admin')
+    
+    # GET: Mostrar formulario
+    return render(request, 'admin/importar_pcpartpicker.html', {
+        'categorias': CATEGORIAS_DISPONIBLES
+    })
+
+
+# Vista para búsqueda AJAX (usa DummyJSON API)
+def buscar_pcpartpicker(request):
+    """Búsqueda en tiempo real usando DummyJSON API"""
+    termino = request.GET.get('q', '')
+    
+    if len(termino) < 3:
+        return JsonResponse({'productos': [], 'error': 'Término muy corto'})
+    
+    try:
+        productos = hardware_api_service.buscar_productos_api(termino, limite=8)
+        return JsonResponse({
+            'productos': [
+                {
+                    'nombre': p['nombre'],
+                    'precio': float(p['precio']),
+                    'imagen': p.get('imagen_url', ''),
+                    'categoria': p.get('categoria', '')
+                }
+                for p in productos
+            ]
+        })
+    except Exception as e:
+        return JsonResponse({'productos': [], 'error': str(e)})
 
 
 
@@ -1166,3 +1335,86 @@ def admin_exportar_reporte(request):
     return response
 
 
+# ============================================
+# VISTAS DE DEVOLUCIONES
+# ============================================
+
+# Vista para solicitar devolución (cliente)
+@login_required
+def solicitar_devolucion(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id, usuario=request.user)
+    
+    # Solo permitir devolución de pedidos entregados
+    if pedido.estado != 'entregado':
+        messages.error(request, 'Solo puedes solicitar devolución de pedidos entregados')
+        return redirect('detalle_pedido', pedido_id=pedido.id)
+    
+    # Verificar si ya tiene devolución pendiente
+    if Devolucion.objects.filter(pedido=pedido, estado='pendiente').exists():
+        messages.warning(request, 'Ya tienes una solicitud de devolución pendiente para este pedido')
+        return redirect('mis_devoluciones')
+    
+    if request.method == 'POST':
+        motivo = request.POST.get('motivo')
+        descripcion = request.POST.get('descripcion', '')
+        
+        Devolucion.objects.create(
+            pedido=pedido,
+            usuario=request.user,
+            motivo=motivo,
+            descripcion=descripcion
+        )
+        
+        messages.success(request, '✅ Solicitud de devolución enviada. Te notificaremos pronto.')
+        return redirect('mis_devoluciones')
+    
+    return render(request, 'solicitar_devolucion.html', {'pedido': pedido})
+
+
+# Vista de mis devoluciones (cliente)
+@login_required
+def mis_devoluciones(request):
+    devoluciones = Devolucion.objects.filter(usuario=request.user)
+    return render(request, 'mis_devoluciones.html', {'devoluciones': devoluciones})
+
+
+# Vista admin para gestionar devoluciones
+@staff_member_required
+def admin_devoluciones(request):
+    devoluciones = Devolucion.objects.all()
+    pendientes = devoluciones.filter(estado='pendiente').count()
+    return render(request, 'admin/gestionar_devoluciones.html', {
+        'devoluciones': devoluciones,
+        'pendientes': pendientes
+    })
+
+
+# Vista para aprobar/rechazar devolución (admin)
+@staff_member_required
+def gestionar_devolucion(request, devolucion_id):
+    devolucion = get_object_or_404(Devolucion, id=devolucion_id)
+    
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+        respuesta = request.POST.get('respuesta', '')
+        monto = request.POST.get('monto_reembolso')
+        
+        devolucion.respuesta_admin = respuesta
+        devolucion.fecha_resolucion = timezone.now()
+        
+        if accion == 'aprobar':
+            devolucion.estado = 'aprobada'
+            if monto:
+                devolucion.monto_reembolso = Decimal(monto)
+            messages.success(request, f'✅ Devolución #{devolucion.id} aprobada')
+        elif accion == 'rechazar':
+            devolucion.estado = 'rechazada'
+            messages.warning(request, f'❌ Devolución #{devolucion.id} rechazada')
+        elif accion == 'completar':
+            devolucion.estado = 'completada'
+            messages.success(request, f'✅ Devolución #{devolucion.id} completada')
+        
+        devolucion.save()
+        return redirect('admin_devoluciones')
+    
+    return render(request, 'admin/detalle_devolucion.html', {'devolucion': devolucion})

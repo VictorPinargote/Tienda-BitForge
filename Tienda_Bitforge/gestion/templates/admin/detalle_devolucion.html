@@ -1,0 +1,135 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devolución #{{ devolucion.id }} | BitForge Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-orange: #ff9900;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-orange);
+        }
+
+        .glass-card {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+        }
+
+        .form-control,
+        .form-select {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #444;
+            color: #fff;
+        }
+
+        .form-control:focus {
+            border-color: var(--neon-green);
+            color: #fff;
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .form-label {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'admin_devoluciones' %}">
+                <i class="bi bi-arrow-left"></i> Volver a Devoluciones
+            </a>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="glass-card">
+                    <h4 style="color: var(--neon-orange);"><i class="bi bi-info-circle"></i> Información</h4>
+                    <hr class="border-secondary">
+                    <p><strong>ID:</strong> #{{ devolucion.id }}</p>
+                    <p><strong>Pedido:</strong> #{{ devolucion.pedido.numero_pedido }}</p>
+                    <p><strong>Cliente:</strong> {{ devolucion.usuario.username }}</p>
+                    <p><strong>Fecha:</strong> {{ devolucion.fecha_solicitud|date:"d/m/Y H:i" }}</p>
+                    <p><strong>Motivo:</strong> {{ devolucion.get_motivo_display }}</p>
+                    <p><strong>Estado:</strong>
+                        <span class="badge
+                            {% if devolucion.estado == 'pendiente' %}bg-warning text-dark
+                            {% elif devolucion.estado == 'aprobada' %}bg-info
+                            {% elif devolucion.estado == 'rechazada' %}bg-danger
+                            {% elif devolucion.estado == 'completada' %}bg-success{% endif %}">
+                            {{ devolucion.get_estado_display }}
+                        </span>
+                    </p>
+                    <hr class="border-secondary">
+                    <p><strong>Descripción del problema:</strong></p>
+                    <p class="text-secondary">{{ devolucion.descripcion }}</p>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="glass-card">
+                    <h4 class="text-neon"><i class="bi bi-gear"></i> Gestionar</h4>
+                    <hr class="border-secondary">
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Respuesta al Cliente</label>
+                            <textarea name="respuesta" class="form-control" rows="3"
+                                placeholder="Escribe una respuesta...">{{ devolucion.respuesta_admin }}</textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Monto de Reembolso ($)</label>
+                            <input type="number" step="0.01" name="monto_reembolso" class="form-control"
+                                value="{{ devolucion.monto_reembolso|default:'' }}" placeholder="0.00">
+                        </div>
+
+                        <div class="d-flex gap-2 flex-wrap">
+                            {% if devolucion.estado == 'pendiente' %}
+                            <button type="submit" name="accion" value="aprobar" class="btn btn-success">
+                                <i class="bi bi-check-lg"></i> Aprobar
+                            </button>
+                            <button type="submit" name="accion" value="rechazar" class="btn btn-danger">
+                                <i class="bi bi-x-lg"></i> Rechazar
+                            </button>
+                            {% elif devolucion.estado == 'aprobada' %}
+                            <button type="submit" name="accion" value="completar" class="btn btn-primary">
+                                <i class="bi bi-check-all"></i> Marcar Completada
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

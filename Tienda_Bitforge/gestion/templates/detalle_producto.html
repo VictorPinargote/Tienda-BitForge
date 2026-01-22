@@ -171,19 +171,9 @@
             background: #fff;
         }
 
-        /* Share buttons */
-        .share-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .share-btn:hover {
-            transform: scale(1.1);
+        /* Especificaciones - texto blanco */
+        .product-container table td {
+            color: #fff !important;
         }
     </style>
 </head>
@@ -241,7 +231,7 @@
                     <div class="d-flex align-items-center gap-3 mb-4">
                         <span class="fs-2 text-neon fw-bold">${{ producto.precio }}</span>
                         {% if producto.stock > 0 %}
-                        <span class="badge bg-success fs-6">{{ producto.get_estado_stock }}</span>
+                        <span class="badge bg-success fs-6">{{ producto.stock }} unidades</span>
                         {% else %}
                         <span class="badge bg-danger fs-6">Agotado</span>
                         {% endif %}
@@ -266,211 +256,204 @@
                             title="Agregar a deseos">
                             <i class="bi bi-heart"></i>
                         </a>
-                        <a href="{% url 'agregar_comparar' producto.id %}"
-                            class="btn btn-outline-info action-btn compare" title="Comparar">
-                            <i class="bi bi-arrow-left-right"></i>
-                        </a>
                     </div>
                     {% elif not user.is_authenticated %}
-                    <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg mb-4">
-                        <i class="bi bi-person"></i> Inicia sesión para comprar
-                    </a>
+                    <!-- Usuario no autenticado - puede agregar al carrito -->
+                    <div class="d-flex gap-3 mb-4 flex-wrap">
+                        {% if producto.stock > 0 %}
+                        <a href="{% url 'agregar_carrito' producto.id %}" class="btn btn-neon btn-lg">
+                            <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                        </a>
+                        {% else %}
+                        <button class="btn btn-secondary btn-lg" disabled>
+                            <i class="bi bi-x-circle"></i> Agotado
+                        </button>
+                        {% endif %}
+                    </div>
                     {% else %}
+                    <!-- Usuario staff/admin -->
                     <div class="alert alert-info mb-4">
-                        <i class="bi bi-info-circle"></i> Vista de administrador. Stock actual: <strong>{{
-                            producto.stock }} unidades</strong>
+                        <i class="bi bi-info-circle"></i> Vista de administrador. Stock actual: <strong>{{ producto.stock }} unidades</strong>
                     </div>
                     {% endif %}
 
-                    <!-- Share Buttons -->
-                    <div class="mb-4">
-                        <span class="text-muted me-2">Compartir:</span>
-                        <a href="#" class="share-btn btn btn-outline-primary btn-sm" onclick="shareOn('facebook')"><i
-                                class="bi bi-facebook"></i></a>
-                        <a href="#" class="share-btn btn btn-outline-info btn-sm" onclick="shareOn('twitter')"><i
-                                class="bi bi-twitter-x"></i></a>
-                        <a href="#" class="share-btn btn btn-outline-success btn-sm" onclick="shareOn('whatsapp')"><i
-                                class="bi bi-whatsapp"></i></a>
-                        <button class="share-btn btn btn-outline-secondary btn-sm" onclick="copyLink()"><i
-                                class="bi bi-link-45deg"></i></button>
-                    </div>
-
                     <hr class="border-secondary">
 
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <i class="bi bi-truck fs-4 text-neon"></i>
-                            <p class="small text-muted mb-0">Envío Gratis</p>
-                        </div>
-                        <div class="col-4">
-                            <i class="bi bi-shield-check fs-4 text-neon"></i>
-                            <p class="small text-muted mb-0">Garantía 1 Año</p>
-                        </div>
-                        <div class="col-4">
-                            <i class="bi bi-arrow-repeat fs-4 text-neon"></i>
-                            <p class="small text-muted mb-0">Devolución 30 días</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tabs: Descripción / Especificaciones / Reseñas -->
-        <ul class="nav nav-tabs mt-5" id="productTabs" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#descripcion">
-                    <i class="bi bi-file-text"></i> Descripción
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#resenas">
-                    <i class="bi bi-star"></i> Reseñas ({{ resenas.count|default:0 }})
-                </button>
-            </li>
-        </ul>
-
-        <div class="tab-content">
-            <!-- Descripción -->
-            <div class="tab-pane fade show active" id="descripcion">
-                <div class="row">
-                    <div class="col-md-8">
-                        <h5 class="text-neon mb-3">Detalles del Producto</h5>
-                        <p class="text-secondary">{{ producto.descripcion }}</p>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="product-container p-3">
-                            <h6 class="mb-3">Especificaciones</h6>
-                            <table class="table table-sm table-borderless text-white">
-                                <tr>
-                                    <td class="text-muted">Categoría:</td>
-                                    <td>{{ producto.categoria.nombre|default:"N/A" }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted">Tipo:</td>
-                                    <td>{{ producto.get_tipo_display }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-muted">Stock:</td>
-                                    <td>{{ producto.stock }} unidades</td>
-                                </tr>
-                                {% if producto.proveedor %}
-                                <tr>
-                                    <td class="text-muted">Proveedor:</td>
-                                    <td>{{ producto.proveedor.nombre }}</td>
-                                </tr>
-                                {% endif %}
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reseñas -->
-            <div class="tab-pane fade" id="resenas">
-                {% if resenas %}
-                {% for resena in resenas %}
-                <div class="review-card">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <strong>{{ resena.usuario.username }}</strong>
-                            <div class="star-rating">
-                                {% for i in "12345" %}
-                                {% if forloop.counter <= resena.calificacion %} <i class="bi bi-star-fill"></i>
-                                    {% else %}
-                                    <i class="bi bi-star empty"></i>
-                                    {% endif %}
-                                    {% endfor %}
+                        <div class="row text-center mt-4">
+                            <div class="col-4">
+                                <i class="bi bi-truck fs-3 text-neon mb-2"></i>
+                                <p class="small text-white mb-0">Envío Gratis</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="bi bi-shield-check fs-3 text-neon mb-2"></i>
+                                <p class="small text-white mb-0">Garantía 1 Año</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="bi bi-arrow-repeat fs-3 text-neon mb-2"></i>
+                                <p class="small text-white mb-0">Devolución 30 días</p>
                             </div>
                         </div>
-                        <small class="text-muted">{{ resena.fecha|date:"d/m/Y" }}</small>
                     </div>
-                    <p class="mt-2 mb-0 text-secondary">{{ resena.comentario }}</p>
+                </div>
+            </div>
+
+            <!-- Tabs: Descripción / Especificaciones / Reseñas -->
+            <ul class="nav nav-tabs mt-5" id="productTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#descripcion">
+                        <i class="bi bi-file-text"></i> Descripción
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#resenas">
+                        <i class="bi bi-star"></i> Reseñas ({{ resenas.count|default:0 }})
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Descripción -->
+                <div class="tab-pane fade show active" id="descripcion">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="text-neon mb-3">Detalles del Producto</h5>
+                            <p class="text-secondary">{{ producto.descripcion }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="product-container p-3">
+                                <h6 class="mb-3">Especificaciones</h6>
+                                <table class="table table-sm table-borderless text-white">
+                                    <tr>
+                                        <td class="text-muted">Categoría:</td>
+                                        <td>{{ producto.categoria.nombre|default:"N/A" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Tipo:</td>
+                                        <td>{{ producto.get_tipo_display }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted">Stock:</td>
+                                        <td>{{ producto.stock }} unidades</td>
+                                    </tr>
+                                    {% if producto.proveedor %}
+                                    <tr>
+                                        <td class="text-muted">Proveedor:</td>
+                                        <td>{{ producto.proveedor.nombre }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reseñas -->
+                <div class="tab-pane fade" id="resenas">
+                    {% if resenas %}
+                    {% for resena in resenas %}
+                    <div class="review-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ resena.usuario.username }}</strong>
+                                <div class="star-rating">
+                                    {% for i in "12345" %}
+                                    {% if forloop.counter <= resena.calificacion %} <i class="bi bi-star-fill"></i>
+                                        {% else %}
+                                        <i class="bi bi-star empty"></i>
+                                        {% endif %}
+                                        {% endfor %}
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ resena.fecha|date:"d/m/Y" }}</small>
+                        </div>
+                        <p class="mt-2 mb-0 text-secondary">{{ resena.comentario }}</p>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-chat-square-text text-secondary fs-1"></i>
+                        <p class="text-secondary mt-3">Aún no hay reseñas para este producto</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Formulario de reseña -->
+                    {% if user.is_authenticated and not user.is_staff %}
+                    <div class="product-container mt-4">
+                        <h5 class="mb-3"><i class="bi bi-pencil"></i> Escribir una reseña</h5>
+                        <form method="post" action="{% url 'agregar_resena' producto.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Calificación</label>
+                                <select name="calificacion" class="form-select" style="max-width: 150px;">
+                                    <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                                    <option value="4">⭐⭐⭐⭐ (4)</option>
+                                    <option value="3">⭐⭐⭐ (3)</option>
+                                    <option value="2">⭐⭐ (2)</option>
+                                    <option value="1">⭐ (1)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tu reseña</label>
+                                <textarea name="comentario" class="form-control" rows="3"
+                                    placeholder="Cuéntanos tu experiencia con este producto..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-neon">
+                                <i class="bi bi-send"></i> Enviar Reseña
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Productos Relacionados -->
+            {% if relacionados %}
+            <h4 class="mt-5 mb-4"><i class="bi bi-lightning text-neon"></i> Productos Relacionados</h4>
+            <div class="row g-3">
+                {% for p in relacionados %}
+                <div class="col-6 col-md-3">
+                    <div class="related-card p-3 text-center h-100">
+                        <img src="{{ p.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=150' }}"
+                            alt="{{ p.nombre }}" class="w-100 rounded">
+                        <h6 class="mt-2 mb-1">{{ p.nombre|truncatewords:5 }}</h6>
+                        <span class="text-neon fw-bold">${{ p.precio }}</span>
+                        <a href="{% url 'detalle_producto' p.id %}"
+                            class="btn btn-outline-light btn-sm w-100 mt-2">Ver</a>
+                    </div>
                 </div>
                 {% endfor %}
-                {% else %}
-                <div class="text-center py-5">
-                    <i class="bi bi-chat-square-text text-secondary fs-1"></i>
-                    <p class="text-secondary mt-3">Aún no hay reseñas para este producto</p>
-                </div>
-                {% endif %}
-
-                <!-- Formulario de reseña -->
-                {% if user.is_authenticated and not user.is_staff %}
-                <div class="product-container mt-4">
-                    <h5 class="mb-3"><i class="bi bi-pencil"></i> Escribir una reseña</h5>
-                    <form method="post" action="{% url 'agregar_resena' producto.id %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Calificación</label>
-                            <select name="calificacion" class="form-select" style="max-width: 150px;">
-                                <option value="5">⭐⭐⭐⭐⭐ (5)</option>
-                                <option value="4">⭐⭐⭐⭐ (4)</option>
-                                <option value="3">⭐⭐⭐ (3)</option>
-                                <option value="2">⭐⭐ (2)</option>
-                                <option value="1">⭐ (1)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tu reseña</label>
-                            <textarea name="comentario" class="form-control" rows="3"
-                                placeholder="Cuéntanos tu experiencia con este producto..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-neon">
-                            <i class="bi bi-send"></i> Enviar Reseña
-                        </button>
-                    </form>
-                </div>
-                {% endif %}
             </div>
+            {% endif %}
         </div>
 
-        <!-- Productos Relacionados -->
-        {% if relacionados %}
-        <h4 class="mt-5 mb-4"><i class="bi bi-lightning text-neon"></i> Productos Relacionados</h4>
-        <div class="row g-3">
-            {% for p in relacionados %}
-            <div class="col-6 col-md-3">
-                <div class="related-card p-3 text-center h-100">
-                    <img src="{{ p.imagen_url|default:'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=150' }}"
-                        alt="{{ p.nombre }}" class="w-100 rounded">
-                    <h6 class="mt-2 mb-1">{{ p.nombre|truncatewords:5 }}</h6>
-                    <span class="text-neon fw-bold">${{ p.precio }}</span>
-                    <a href="{% url 'detalle_producto' p.id %}" class="btn btn-outline-light btn-sm w-100 mt-2">Ver</a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            function shareOn(platform) {
+                const url = encodeURIComponent(window.location.href);
+                const title = encodeURIComponent("{{ producto.nombre }} - BitForge");
+                let shareUrl = '';
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function shareOn(platform) {
-            const url = encodeURIComponent(window.location.href);
-            const title = encodeURIComponent("{{ producto.nombre }} - BitForge");
-            let shareUrl = '';
+                switch (platform) {
+                    case 'facebook':
+                        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                        break;
+                    case 'twitter':
+                        shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+                        break;
+                    case 'whatsapp':
+                        shareUrl = `https://wa.me/?text=${title}%20${url}`;
+                        break;
+                }
 
-            switch (platform) {
-                case 'facebook':
-                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
-                    break;
-                case 'twitter':
-                    shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
-                    break;
-                case 'whatsapp':
-                    shareUrl = `https://wa.me/?text=${title}%20${url}`;
-                    break;
+                if (shareUrl) window.open(shareUrl, '_blank', 'width=600,height=400');
             }
 
-            if (shareUrl) window.open(shareUrl, '_blank', 'width=600,height=400');
-        }
-
-        function copyLink() {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                alert('¡Enlace copiado!');
-            });
-        }
-    </script>
+            function copyLink() {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('¡Enlace copiado!');
+                });
+            }
+        </script>
 </body>
 
 </html>

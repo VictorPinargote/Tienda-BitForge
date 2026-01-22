@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Devoluciones | BitForge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --neon-green: #00ff88;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-green);
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+        }
+
+        .glass-card {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container">
+            <a class="navbar-brand text-neon" href="{% url 'home' %}"><i class="bi bi-cpu"></i> BITFORGE</a>
+            <a href="{% url 'mis_pedidos' %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left"></i> Mis Pedidos
+            </a>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <h2 class="text-neon mb-4"><i class="bi bi-arrow-return-left"></i> Mis Devoluciones</h2>
+
+        {% if devoluciones %}
+        {% for dev in devoluciones %}
+        <div class="glass-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5>Pedido #{{ dev.pedido.numero_pedido }}</h5>
+                    <p class="mb-1 text-secondary">
+                        <i class="bi bi-calendar"></i> {{ dev.fecha_solicitud|date:"d/m/Y H:i" }}
+                    </p>
+                    <p class="mb-1"><strong>Motivo:</strong> {{ dev.get_motivo_display }}</p>
+                    <p class="text-secondary small">{{ dev.descripcion|truncatewords:20 }}</p>
+
+                    {% if dev.respuesta_admin %}
+                    <div class="mt-2 p-2 rounded" style="background: rgba(0,255,136,0.1);">
+                        <small class="text-neon"><i class="bi bi-reply"></i> Respuesta:</small>
+                        <p class="mb-0 small">{{ dev.respuesta_admin }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if dev.monto_reembolso %}
+                    <p class="text-success mt-2 mb-0">
+                        <i class="bi bi-cash"></i> Reembolso: ${{ dev.monto_reembolso }}
+                    </p>
+                    {% endif %}
+                </div>
+                <span class="badge fs-6
+                        {% if dev.estado == 'pendiente' %}bg-warning text-dark
+                        {% elif dev.estado == 'aprobada' %}bg-info
+                        {% elif dev.estado == 'rechazada' %}bg-danger
+                        {% elif dev.estado == 'completada' %}bg-success{% endif %}">
+                    {{ dev.get_estado_display }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-box-seam text-secondary" style="font-size: 4rem;"></i>
+            <h4 class="text-secondary mt-3">No tienes devoluciones</h4>
+            <a href="{% url 'mis_pedidos' %}" class="btn btn-outline-light mt-3">Ver Mis Pedidos</a>
+        </div>
+        {% endif %}
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

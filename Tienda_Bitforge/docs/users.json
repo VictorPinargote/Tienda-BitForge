@@ -1,7 +1,17 @@
 [
-    {
-        "username": "joelp",
-        "tipo_usuario": "admin",
-        "fecha_registro": "2026-01-20"
-    }
+  {
+    "username": "joelp",
+    "tipo_usuario": "admin",
+    "fecha_registro": "2026-01-20"
+  },
+  {
+    "username": "Rahi",
+    "tipo_usuario": "admin",
+    "fecha_registro": "2026-01-21 08:32:40"
+  },
+  {
+    "username": "juan",
+    "tipo_usuario": "cliente",
+    "fecha_registro": "2026-01-22 06:55:04"
+  }
 ]

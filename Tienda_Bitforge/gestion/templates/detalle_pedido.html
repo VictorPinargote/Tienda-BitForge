@@ -230,20 +230,29 @@
                     {% endif %}
                 </div>
 
-                <!-- Resumen del Pago -->
+                <!-- Resumen del Pago con IVA -->
                 <div class="glass-card p-4">
-                    <h5 class="mb-3"><i class="bi bi-credit-card text-neon"></i> Resumen</h5>
+                    <h5 class="mb-3"><i class="bi bi-credit-card text-neon"></i> Factura</h5>
 
-                    {% if pedido.descuento_aplicado > 0 %}
+                    {% with subtotal_sin_iva=pedido.total|add:pedido.descuento_aplicado %}
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-secondary">Subtotal</span>
-                        <span>${{ pedido.total|add:pedido.descuento_aplicado }}</span>
+                        <span>${{ subtotal_sin_iva }}</span>
                     </div>
+                    {% endwith %}
+
+                    {% if pedido.descuento_aplicado > 0 %}
                     <div class="d-flex justify-content-between mb-2 text-success">
                         <span>Descuento ({{ pedido.cupon_aplicado.codigo }})</span>
                         <span>-${{ pedido.descuento_aplicado }}</span>
                     </div>
                     {% endif %}
+
+                    <!-- IVA 15% -->
+                    <div class="d-flex justify-content-between mb-2 text-info">
+                        <span>IVA (15%)</span>
+                        <span>Incluido</span>
+                    </div>
 
                     <hr class="border-secondary">
 
@@ -259,6 +268,14 @@
                             <i class="bi bi-check-circle"></i> Pago Confirmado
                         </span>
                     </div>
+
+                    <!-- Botón de Devolución (solo si está entregado) -->
+                    {% if pedido.estado == 'entregado' %}
+                    <hr class="border-secondary">
+                    <a href="{% url 'solicitar_devolucion' pedido.id %}" class="btn btn-outline-warning w-100">
+                        <i class="bi bi-arrow-return-left"></i> Solicitar Devolución
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

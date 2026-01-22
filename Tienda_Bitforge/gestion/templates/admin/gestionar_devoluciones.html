@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Devoluciones | BitForge Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-orange: #ff9900;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .navbar {
+            background: rgba(0, 0, 0, 0.9) !important;
+            border-bottom: 2px solid var(--neon-orange);
+        }
+
+        .text-neon {
+            color: var(--neon-green);
+        }
+
+        .glass-card {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        .btn-neon {
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .btn-neon:hover {
+            background: var(--neon-green);
+            color: #000;
+        }
+
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: #fff;
+        }
+
+        .table th {
+            background: rgba(255, 153, 0, 0.2);
+            color: var(--neon-orange);
+        }
+
+        .table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'panel_admin' %}">
+                <i class="bi bi-shield-lock text-warning"></i> BITFORGE ADMIN
+            </a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'admin_pedidos' %}" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-bag"></i> Pedidos
+                </a>
+                <a href="{% url 'panel_admin' %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-speedometer2"></i> Panel
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 style="color: var(--neon-orange);">
+                <i class="bi bi-arrow-return-left"></i> Gestionar Devoluciones
+            </h2>
+            {% if pendientes > 0 %}
+            <span class="badge bg-warning text-dark fs-6">{{ pendientes }} pendientes</span>
+            {% endif %}
+        </div>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div class="glass-card p-4">
+            {% if devoluciones %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pedido</th>
+                            <th>Cliente</th>
+                            <th>Motivo</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dev in devoluciones %}
+                        <tr>
+                            <td>#{{ dev.id }}</td>
+                            <td>#{{ dev.pedido.numero_pedido }}</td>
+                            <td>{{ dev.usuario.username }}</td>
+                            <td>{{ dev.get_motivo_display }}</td>
+                            <td>{{ dev.fecha_solicitud|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if dev.estado == 'pendiente' %}bg-warning text-dark
+                                    {% elif dev.estado == 'aprobada' %}bg-info
+                                    {% elif dev.estado == 'rechazada' %}bg-danger
+                                    {% elif dev.estado == 'completada' %}bg-success{% endif %}">
+                                    {{ dev.get_estado_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'gestionar_devolucion' dev.id %}" class="btn btn-sm btn-outline-light">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox text-secondary" style="font-size: 4rem;"></i>
+                <h4 class="text-secondary mt-3">No hay devoluciones</h4>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

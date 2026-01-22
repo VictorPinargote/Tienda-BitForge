@@ -57,7 +57,8 @@ urlpatterns = [
     # Búsqueda AJAX
     path('busqueda/', views.busqueda_ajax, name='busqueda_ajax'),
 
-    # Solicitudes Cliente (existente)
+    # Solicitudes Cliente (existente y nueva)
+    path('solicitud/generica/', views.crear_solicitud_generica, name='crear_solicitud_generica'),
     path('solicitud/crear/<int:producto_id>/', views.crear_solicitud, name='crear_solicitud'),
     path('mis-solicitudes/', views.mis_solicitudes, name='mis_solicitudes'),
 
@@ -82,8 +83,20 @@ urlpatterns = [
     # Utilidades Admin
     path('staff/cargar-productos/', views.cargar_productos_demo, name='cargar_productos'),
     path('staff/limpiar-productos/', views.limpiar_productos, name='limpiar_productos'),
+    path('staff/importar-pcpartpicker/', views.importar_pcpartpicker, name='importar_pcpartpicker'),
+    
+    # Búsqueda PCPartPicker (AJAX)
+    path('buscar-pcpartpicker/', views.buscar_pcpartpicker, name='buscar_pcpartpicker'),
     
     # Nuevas funcionalidades Admin
     path('staff/clientes/', views.admin_clientes, name='admin_clientes'),
     path('staff/exportar/', views.admin_exportar_reporte, name='admin_exportar'),
+    
+    # Devoluciones (Cliente)
+    path('devolucion/solicitar/<int:pedido_id>/', views.solicitar_devolucion, name='solicitar_devolucion'),
+    path('mis-devoluciones/', views.mis_devoluciones, name='mis_devoluciones'),
+    
+    # Devoluciones (Admin)
+    path('staff/devoluciones/', views.admin_devoluciones, name='admin_devoluciones'),
+    path('staff/devolucion/<int:devolucion_id>/', views.gestionar_devolucion, name='gestionar_devolucion'),
 ]

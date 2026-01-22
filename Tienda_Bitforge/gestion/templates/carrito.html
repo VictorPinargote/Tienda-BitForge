@@ -333,9 +333,18 @@
                         <span class="fs-4 text-neon fw-bold">${{ total_final }}</span>
                     </div>
 
+                    {% if user.is_authenticated %}
                     <a href="{% url 'checkout' %}" class="btn btn-checkout w-100 py-3 fs-5">
                         <i class="bi bi-credit-card"></i> Finalizar Compra
                     </a>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={% url 'checkout' %}" class="btn btn-checkout w-100 py-3 fs-5">
+                        <i class="bi bi-person"></i> Iniciar Sesión para Pagar
+                    </a>
+                    <p class="text-center text-muted small mt-2 mb-0">
+                        ¿No tienes cuenta? <a href="{% url 'registro' %}" class="text-neon">Regístrate</a>
+                    </p>
+                    {% endif %}
 
                     <a href="{% url 'catalogo' %}" class="btn btn-outline-secondary w-100 mt-2">
                         <i class="bi bi-arrow-left"></i> Seguir Comprando

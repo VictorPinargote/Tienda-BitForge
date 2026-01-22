@@ -5,8 +5,8 @@ password = 'admin1470'
 
 -------------> USUARIOS CLIENTES <-------------
 
-username = 'joelp'
-password = 'admin1470'
+username = 'juan'
+password = 'juanito123'
 
 -------------> USUARIO SUPERVISOR <---------------
 
@@ -20,6 +20,6 @@ password = 'admin1470'
 
 -------------> USUARIO ADMIN <-------------
 
-username = 'joelp'
-password = 'admin1470'
+username = 'Rahi'
+password = 'rahilaloba'
 
